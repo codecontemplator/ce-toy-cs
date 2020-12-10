@@ -5,14 +5,14 @@ namespace ce_toy_cs
 {
     class Process
     {
-        public static RuleExpr<int> AbsoluteMaxAmount(int amountLimit)
+        private static RuleExpr<int> AbsoluteMaxAmount(int amountLimit)
         {
             return
                 from amount in Dsl.GetAmount()
                 select Math.Min(amount, amountLimit);
         }
 
-        public static RuleExpr<int> MaxTotalDebt(int debtLimit)
+        private static RuleExpr<int> MaxTotalDebt(int debtLimit)
         {
             return
                 from creditA in Dsl.GetValue("CreditA")
