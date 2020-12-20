@@ -20,7 +20,7 @@ namespace ce_toy_cs
                 from creditA in Dsl.GetValue("CreditA")
                 from creditB in Dsl.GetValue("CreditB")
                 let totalCredit = creditA + creditB
-                select creditA > debtLimit ? 0 : amount;
+                select totalCredit > debtLimit ? 0 : amount;
         }
 
         //public static IRule GetProcess()
