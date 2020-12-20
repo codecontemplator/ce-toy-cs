@@ -9,6 +9,7 @@ namespace ce_toy_cs
         {
             var process = Process.GetProcess();
 
+            Console.WriteLine($"Process uses keys: {string.Join(',', process.GetKeys())}");
             var builder = ImmutableDictionary.CreateBuilder<string, int>();
             builder.Add("CreditA", 100);
             builder.Add("CreditB", 2);
@@ -24,7 +25,8 @@ namespace ce_toy_cs
                 }
             });
 
-            Console.WriteLine(result.Item1);
+            Console.WriteLine($"Evaluation result (granted amount): {result.Item1}");
+            Console.WriteLine($"Evaluation log: {string.Join(',',result.Item2.Log)}");
         }
     }
 }

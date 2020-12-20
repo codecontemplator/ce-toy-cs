@@ -1,10 +1,12 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ce_toy_cs
 {
     interface IRule
     {
         (int, RuleContext) Eval(RuleContext context);
+        IEnumerable<string> GetKeys();
     }
 
     record RuleLogEntry
@@ -22,14 +24,16 @@ namespace ce_toy_cs
 
     class AtomicRule : IRule
     {
-        public AtomicRule(string name, RuleExpr<int> expr)
+        public AtomicRule(string name, RuleExprAst<int> expr)
         {
             Name = name;
-            Expr = expr;
+            Expr = expr.Compile();
+            Keys = ImmutableList.ToImmutableList(expr.GetKeys());
         }
 
         public string Name { get; }
         public RuleExpr<int> Expr { get; }
+        public IImmutableList<string> Keys { get; }
 
         public (int, RuleContext) Eval(RuleContext context)
         {
@@ -43,6 +47,8 @@ namespace ce_toy_cs
                     }
                 );
         }
+
+        public IEnumerable<string> GetKeys() => Keys;
     }
 
     class AndThenRule : IRule
@@ -61,6 +67,14 @@ namespace ce_toy_cs
             var (a, context2) = r1.Eval(context);
             var context3 = context2 with { RuleExprContext = context2.RuleExprContext with { Amount = a } };
             return r2.Eval(context3);
+        }
+
+        public IEnumerable<string> GetKeys()
+        {
+            foreach (var key in r1.GetKeys())
+                yield return key;
+            foreach (var key in r2.GetKeys())
+                yield return key;
         }
     }
 
