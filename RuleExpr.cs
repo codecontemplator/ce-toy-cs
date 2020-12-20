@@ -15,16 +15,29 @@ namespace ce_toy_cs
         public ImmutableDictionary<string,int> KeyValueMap { get; init; }
     }
 
+    public record RuleExprAst<T>
+    {
+        public Expression<RuleExpr<T>> Expression { get; init; }
+    }
+
     static class Dsl
     {
-        public static Expression<RuleExpr<int>> GetAmount() => context => new Tuple<int,RuleExprContext>(context.Amount, context).ToValueTuple();
+        public static RuleExprAst<int> GetAmount()
+        {
+            return 
+                new RuleExprAst<int>
+                {
+                    Expression = (context => new Tuple<int, RuleExprContext>(context.Amount, context).ToValueTuple())
+                };
+        }
 
-        public static Expression<RuleExpr<int>> GetValue(string key)
+        public static RuleExprAst<int> GetValue(string key)
         {
             var getValueImpl = typeof(Dsl).GetMethod("GetValueImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
             var result = Expression.Call(getValueImpl, Expression.Constant(key));
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            return Expression.Lambda<RuleExpr<int>>(result, context);
+            var resultFunc = Expression.Lambda<RuleExpr<int>>(result, context);
+            return new RuleExprAst<int> { Expression = resultFunc };
         }
 
         private static RuleExpr<int> GetValueImpl(string key)
@@ -46,10 +59,10 @@ namespace ce_toy_cs
             };
         }
 
-        public static Expression<RuleExpr<U>> Select<T, U>(this Expression<RuleExpr<T>> expr, Expression<Func<T, U>> convert)
+        public static RuleExprAst<U> Select<T, U>(this RuleExprAst<T> expr, Expression<Func<T, U>> convert)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var valueAndNewContext = Expression.Invoke(expr, context);
+            var valueAndNewContext = Expression.Invoke(expr.Expression, context);
             var value = Expression.Field(valueAndNewContext, "Item1");
             var newContext = Expression.Field(valueAndNewContext, "Item2");
             var convertedValue = Expression.Invoke(convert, value);
@@ -58,7 +71,7 @@ namespace ce_toy_cs
             var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(U), typeof(RuleExprContext));
             var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
             var resultFunc = Expression.Lambda<RuleExpr<U>>(returnValueTuple, context);
-            return resultFunc;
+            return new RuleExprAst<U> { Expression = resultFunc };
             //return context =>
             //{
             //    var (a, context2) = expr(context);
@@ -66,10 +79,10 @@ namespace ce_toy_cs
             //};
         }
 
-        public static Expression<RuleExpr<V>> SelectMany<T, U, V>(this Expression<RuleExpr<T>> expr, Expression<Func<T, RuleExpr<U>>> selector, Expression<Func<T, U, V>> projector)
+        public static RuleExprAst<V> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, RuleExprAst<U>>> selector, Expression<Func<T, U, V>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var intermediateValueAndContext = Expression.Invoke(expr, context);
+            var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
             var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
             var finalValueAndContext = Expression.Invoke(Expression.Invoke(selector, intermediateValue), intermediateContext);
@@ -82,7 +95,7 @@ namespace ce_toy_cs
             var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(V), typeof(RuleExprContext));
             var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
             var resultFunc = Expression.Lambda<RuleExpr<V>>(returnValueTuple, context);
-            return resultFunc;
+            return new RuleExprAst<V> { Expression = resultFunc };
 
             //return context =>
             //{
