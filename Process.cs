@@ -13,16 +13,15 @@ namespace ce_toy_cs
                 select Math.Min(amount, amountLimit);
         }
 
-        //private static Expression<RuleExpr<int>> MaxTotalDebt(int debtLimit)
-        //{
-        //    return
-        //        //from creditA in Dsl.GetValue("CreditA")
-        //        //from creditB in Dsl.GetValue("CreditB")
-        //        from amount in Dsl.GetAmount()
-        //            //let totalCredit = creditA + creditB
-        //            //select creditA > debtLimit ? 0 : amount;
-        //        select amount + 1;
-        //}
+        public static Expression<RuleExpr<int>> MaxTotalDebt(int debtLimit)
+        {
+            return
+                from amount in Dsl.GetAmount()
+                from creditA in Dsl.GetValue("CreditA")
+                //from creditB in Dsl.GetValue("CreditB")
+                let totalCredit = creditA + creditB
+                select creditA > debtLimit ? 0 : amount;
+        }
 
         //public static IRule GetProcess()
         //{
