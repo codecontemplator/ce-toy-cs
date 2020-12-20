@@ -12,8 +12,8 @@ namespace ce_toy_cs
     record RuleLogEntry
     {
         public string RuleName { get; init; }
-        public int AmountIn { get; init; }
-        public int AmountOut { get; init; }
+        public int RequestedAmount { get; init; }
+        public int GrantedAmount { get; init; }
     }
 
     record RuleContext
@@ -42,7 +42,7 @@ namespace ce_toy_cs
                 (
                     amount,
                     context with {
-                        Log = context.Log.Add(new RuleLogEntry { RuleName = Name, AmountIn = context.RuleExprContext.Amount, AmountOut = amount }),
+                        Log = context.Log.Add(new RuleLogEntry { RuleName = Name, RequestedAmount = context.RuleExprContext.Amount, GrantedAmount = amount }),
                         RuleExprContext = ruleExprContext with { Amount = amount }
                     }
                 );
