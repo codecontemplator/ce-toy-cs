@@ -86,8 +86,8 @@ namespace ce_toy_cs
             var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
             var finalValueAndContext = Expression.Invoke(Expression.Invoke(selector, intermediateValue), intermediateContext);
-            var finalValue = Expression.Field(intermediateValueAndContext, "Item1");
-            var finalContext = Expression.Field(intermediateValueAndContext, "Item2");
+            var finalValue = Expression.Field(finalValueAndContext, "Item1");
+            var finalContext = Expression.Field(finalValueAndContext, "Item2");
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
             var returnTuple = Expression.New(typeof(Tuple<U, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) }), new Expression[] { projectedValue, finalContext });
