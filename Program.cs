@@ -19,10 +19,12 @@ namespace ce_toy_cs
             var z = Process.MaxTotalDebt(1000);
             Console.WriteLine(x.ToString());
             var zz = z.Compile();
+            var keys = z.GetKeys();
 
             var builder = ImmutableDictionary.CreateBuilder<string, int>();
             builder.Add("CreditA", 100);
             builder.Add("CreditB", 2000);
+
 
             var zzz = zz(new RuleExprContext()
             {

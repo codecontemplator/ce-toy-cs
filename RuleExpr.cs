@@ -19,6 +19,12 @@ namespace ce_toy_cs
     {
         public Expression<RuleExpr<T>> Expression { get; init; }
         public RuleExpr<T> Compile() => Expression.Compile();
+        public IEnumerable<string> GetKeys()
+        {
+            var findKeysVisitor = new FindKeysVisistor();
+            findKeysVisitor.Visit(Expression);
+            return findKeysVisitor.FoundKeys;
+        }
     }
 
     static class Dsl
