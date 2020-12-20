@@ -18,6 +18,7 @@ namespace ce_toy_cs
     public record RuleExprAst<T>
     {
         public Expression<RuleExpr<T>> Expression { get; init; }
+        public RuleExpr<T> Compile() => Expression.Compile();
     }
 
     static class Dsl
@@ -36,7 +37,7 @@ namespace ce_toy_cs
             var getValueImpl = typeof(Dsl).GetMethod("GetValueImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
             var result = Expression.Call(getValueImpl, Expression.Constant(key));
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var resultFunc = Expression.Lambda<RuleExpr<int>>(result, context);
+            var resultFunc = Expression.Lambda<RuleExpr<int>>(Expression.Invoke(result, context), context);
             return new RuleExprAst<int> { Expression = resultFunc };
         }
 
@@ -85,12 +86,15 @@ namespace ce_toy_cs
             var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
             var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
-            var finalValueAndContext = Expression.Invoke(Expression.Invoke(selector, intermediateValue), intermediateContext);
+            var selectorResult = Expression.Invoke(selector, intermediateValue);
+            var selectorResultExpression = Expression.Property(selectorResult, "Expression");
+            var finalValueAndContext = Expression.Invoke(selectorResultExpression, intermediateContext);
             var finalValue = Expression.Field(finalValueAndContext, "Item1");
             var finalContext = Expression.Field(finalValueAndContext, "Item2");
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
-            var returnTuple = Expression.New(typeof(Tuple<U, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) }), new Expression[] { projectedValue, finalContext });
+            var tupleConstructor = typeof(Tuple<V, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) });
+            var returnTuple = Expression.New(tupleConstructor, new Expression[] { projectedValue, finalContext });
             var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
             var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(V), typeof(RuleExprContext));
             var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);

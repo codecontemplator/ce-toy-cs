@@ -14,6 +14,23 @@ namespace ce_toy_cs
             {
                 Amount = 1500
             });
+
+
+            var z = Process.MaxTotalDebt(1000);
+            Console.WriteLine(x.ToString());
+            var zz = z.Compile();
+
+            var builder = ImmutableDictionary.CreateBuilder<string, int>();
+            builder.Add("CreditA", 100);
+            builder.Add("CreditB", 2000);
+
+            var zzz = zz(new RuleExprContext()
+            {
+                Amount = 1500,
+                KeyValueMap = builder.ToImmutable(),
+                Loaders = ImmutableList<ILoader>.Empty,
+            });
+
             //var process = Process.GetProcess();
 
             //var builder = ImmutableDictionary.CreateBuilder<string, int>();
