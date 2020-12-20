@@ -7,50 +7,26 @@ namespace ce_toy_cs
     {
         static void Main(string[] args)
         {
-            var x = Process.AbsoluteMaxAmount(1000);
-            Console.WriteLine(x.ToString());
-            var xx = x.Compile();
-            var xxx = xx(new RuleExprContext()
-            {
-                Amount = 1500
-            });
+            var process = Process.GetProcess();
 
-
-            var z = Process.MaxTotalDebt(1000);
-            Console.WriteLine(x.ToString());
-            var zz = z.Compile();
-            var keys = z.GetKeys();
-
+            Console.WriteLine($"Process uses keys: {string.Join(',', process.GetKeys())}");
             var builder = ImmutableDictionary.CreateBuilder<string, int>();
             builder.Add("CreditA", 100);
-            builder.Add("CreditB", 2000);
+            builder.Add("CreditB", 2);
 
-
-            var zzz = zz(new RuleExprContext()
+            var result = process.Eval(new RuleContext
             {
-                Amount = 1500,
-                KeyValueMap = builder.ToImmutable(),
-                Loaders = ImmutableList<ILoader>.Empty,
+                Log = ImmutableList<RuleLogEntry>.Empty,
+                RuleExprContext = new RuleExprContext
+                {
+                    Amount = 70,
+                    Loaders = ImmutableList<ILoader>.Empty,
+                    KeyValueMap = builder.ToImmutable()
+                }
             });
 
-            //var process = Process.GetProcess();
-
-            //var builder = ImmutableDictionary.CreateBuilder<string, int>();
-            //builder.Add("CreditA", 100);
-            //builder.Add("CreditB", 2);
-
-            //var result = process.Eval(new RuleContext
-            //{
-            //    Log = ImmutableList<RuleLogEntry>.Empty,
-            //    RuleExprContext = new RuleExprContext
-            //    {
-            //        Amount = 70,
-            //        Loaders = ImmutableList<ILoader>.Empty,
-            //        KeyValueMap = builder.ToImmutable()
-            //    }
-            //});
-
-            //Console.WriteLine(result.Item1);
+            Console.WriteLine($"Evaluation result: {result.Item1}");
+            Console.WriteLine($"Evaluation log: {string.Join(',',result.Item2.Log)}");
         }
     }
 }

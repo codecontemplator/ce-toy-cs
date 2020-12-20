@@ -6,14 +6,14 @@ namespace ce_toy_cs
 {
     class Process
     {
-        public static RuleExprAst<int> AbsoluteMaxAmount(int amountLimit)
+        private static RuleExprAst<int> AbsoluteMaxAmount(int amountLimit)
         {
             return
                 from amount in Dsl.GetAmount()
                 select Math.Min(amount, amountLimit);
         }
 
-        public static RuleExprAst<int> MaxTotalDebt(int debtLimit)
+        private static RuleExprAst<int> MaxTotalDebt(int debtLimit)
         {
             return
                 from amount in Dsl.GetAmount()
@@ -23,13 +23,13 @@ namespace ce_toy_cs
                 select totalCredit > debtLimit ? 0 : amount;
         }
 
-        //public static IRule GetProcess()
-        //{
-        //    return
-        //        new RuleBuilder()
-        //            .Add(new AtomicRule("AbsoluteMaxAmount", AbsoluteMaxAmount(100)))
-        //            .Add(new AtomicRule("MaxTotalDebt", MaxTotalDebt(50)))
-        //            .Build();
-        //}
+        public static IRule GetProcess()
+        {
+            return
+                new RuleBuilder()
+                    .Add(new AtomicRule("AbsoluteMaxAmount", AbsoluteMaxAmount(100)))
+                    .Add(new AtomicRule("MaxTotalDebt", MaxTotalDebt(50)))
+                    .Build();
+        }
     }
 }
