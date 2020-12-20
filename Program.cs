@@ -7,24 +7,31 @@ namespace ce_toy_cs
     {
         static void Main(string[] args)
         {
-            var process = Process.GetProcess();
-
-            var builder = ImmutableDictionary.CreateBuilder<string, int>();
-            builder.Add("CreditA", 100);
-            builder.Add("CreditB", 2);
-
-            var result = process.Eval(new RuleContext
+            var x = Process.AbsoluteMaxAmount(1000);
+            Console.WriteLine(x.ToString());
+            var xx = x.Compile();
+            var xxx = xx(new RuleExprContext()
             {
-                Log = ImmutableList<RuleLogEntry>.Empty,
-                RuleExprContext = new RuleExprContext
-                {
-                    Amount = 70,
-                    Loaders = ImmutableList<ILoader>.Empty,
-                    KeyValueMap = builder.ToImmutable()
-                }
+                Amount = 1500
             });
+            //var process = Process.GetProcess();
 
-            Console.WriteLine(result.Item1);
+            //var builder = ImmutableDictionary.CreateBuilder<string, int>();
+            //builder.Add("CreditA", 100);
+            //builder.Add("CreditB", 2);
+
+            //var result = process.Eval(new RuleContext
+            //{
+            //    Log = ImmutableList<RuleLogEntry>.Empty,
+            //    RuleExprContext = new RuleExprContext
+            //    {
+            //        Amount = 70,
+            //        Loaders = ImmutableList<ILoader>.Empty,
+            //        KeyValueMap = builder.ToImmutable()
+            //    }
+            //});
+
+            //Console.WriteLine(result.Item1);
         }
     }
 }
