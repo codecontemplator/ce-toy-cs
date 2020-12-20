@@ -25,7 +25,7 @@ namespace ce_toy_cs
                 }
             });
 
-            Console.WriteLine($"Evaluation result: {result.Item1}");
+            Console.WriteLine($"Evaluation result (granted amount): {result.Item1}");
             Console.WriteLine($"Evaluation log: {string.Join(',',result.Item2.Log)}");
         }
     }
