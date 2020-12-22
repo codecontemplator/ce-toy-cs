@@ -45,11 +45,11 @@ namespace ce_toy_cs
 
         public static RuleExprAst<int> GetValue(string applicantId, string key)
         {
-            var getValueImpl = typeof(Dsl).GetMethod("GetValueImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-            var result = Expression.Call(getValueImpl, Expression.Constant(applicantId), Expression.Constant(key));
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var resultFunc = Expression.Lambda<RuleExpr<int>>(Expression.Invoke(result, context), context);
-            return new RuleExprAst<int> { Expression = resultFunc };
+            return
+                new RuleExprAst<int>
+                {
+                    Expression = context => GetValueImpl(applicantId, key)(context)
+                };
         }
 
         public static RuleExprAst<ImmutableList<int>> GetValues(string key)
