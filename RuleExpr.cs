@@ -8,11 +8,16 @@ namespace ce_toy_cs
 {
     public delegate (T, RuleExprContext) RuleExpr<T>(RuleExprContext input);
 
+    public record Applicant
+    {
+        public IEnumerable<ILoader> Loaders { get; init; }
+        public ImmutableDictionary<string, int> KeyValueMap { get; init; }
+    }
+
     public record RuleExprContext
     {
         public int Amount { get; init; }
-        public IEnumerable<ILoader> Loaders { get; init; }
-        public ImmutableDictionary<string,int> KeyValueMap { get; init; }
+        public ImmutableDictionary<string,Applicant> Applicants { get; init; }
     }
 
     public record RuleExprAst<T>
@@ -38,32 +43,62 @@ namespace ce_toy_cs
                 };
         }
 
-        public static RuleExprAst<int> GetValue(string key)
+        public static RuleExprAst<int> GetValue(string applicantId, string key)
         {
             var getValueImpl = typeof(Dsl).GetMethod("GetValueImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-            var result = Expression.Call(getValueImpl, Expression.Constant(key));
+            var result = Expression.Call(getValueImpl, Expression.Constant(applicantId), Expression.Constant(key));
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
             var resultFunc = Expression.Lambda<RuleExpr<int>>(Expression.Invoke(result, context), context);
             return new RuleExprAst<int> { Expression = resultFunc };
         }
 
-        private static RuleExpr<int> GetValueImpl(string key)
+        public static RuleExprAst<ImmutableList<int>> GetValues(IEnumerable<string> applicantIds, string key)
+        {
+            Expression<Func<RuleExprContext, RuleExprAst<ImmutableList<int>>>> func = context =>
+                    !applicantIds.Any() ?
+                            Wrap(ImmutableList<int>.Empty) 
+                        :
+                            SelectMany(
+                                GetValue(applicantIds.First(), key),
+                                _ => GetValues(applicantIds.Skip(1), key),
+                                (x, xs) => xs.Add(x));
+
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(func, context), context);
+
+            return new RuleExprAst<ImmutableList<int>> { Expression = resultFunc };
+        }
+
+        private static RuleExpr<int> GetValueImpl(string applicantId, string key)
         {
 
             return context =>
             {
-                if (context.KeyValueMap.TryGetValue(key, out var value))
+                if (!context.Applicants.TryGetValue(applicantId, out var applicant))
+                    throw new Exception($"Applicant {applicantId} not found");
+                
+                if (applicant.KeyValueMap.TryGetValue(key, out var value))
                     return (value, context);
 
-                if (!context.Loaders.Any())
-                    throw new Exception("Failed to load value for key " + key);
+                if (!applicant.Loaders.Any())
+                    throw new Exception($"Failed to load value for key {key} for applicant {applicantId}");
 
-                return GetValueImpl(key)(context with
+                var newContext = context with
                 {
-                    Loaders = context.Loaders.Skip(0),
-                    KeyValueMap = context.Loaders.First().Load(key, context.KeyValueMap)
-                });
+                    Applicants = context.Applicants.SetItem(applicantId, applicant with
+                    {
+                        Loaders = applicant.Loaders.Skip(1),
+                        KeyValueMap = applicant.Loaders.First().Load(key, applicant.KeyValueMap)
+                    })
+                };
+
+                return GetValueImpl(applicantId, key)(newContext);
             };
+        }
+
+        public static RuleExprAst<T> Wrap<T>(T value)
+        {
+            return new RuleExprAst<T> { Expression = context => new Tuple<T,RuleExprContext>(value, context).ToValueTuple() };
         }
 
         public static RuleExprAst<U> Select<T, U>(this RuleExprAst<T> expr, Expression<Func<T, U>> convert)
