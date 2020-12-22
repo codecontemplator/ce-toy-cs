@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace ce_toy_cs
@@ -13,6 +14,9 @@ namespace ce_toy_cs
             var builder = ImmutableDictionary.CreateBuilder<string, int>();
             builder.Add("CreditA", 100);
             builder.Add("CreditB", 2);
+            builder.Add("Salary", 20);
+
+            var x = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } }.ToImmutableDictionary();
 
             var result = process.Eval(new RuleContext
             {
@@ -20,8 +24,35 @@ namespace ce_toy_cs
                 RuleExprContext = new RuleExprContext
                 {
                     Amount = 70,
-                    Loaders = ImmutableList<ILoader>.Empty,
-                    KeyValueMap = builder.ToImmutable()
+                    Applicants = new Dictionary<string, Applicant>()
+                    {
+                        {
+                            "applicant1",
+                            new Applicant
+                            {
+                                KeyValueMap = new Dictionary<string, int>
+                                {
+                                    { "CreditA", 100 },
+                                    { "CreditB", 2 },
+                                    { "Salary", 10 },
+                                }.ToImmutableDictionary(),
+                                Loaders = ImmutableList<ILoader>.Empty
+                            }
+                        },
+                        {
+                            "applicant2",
+                            new Applicant
+                            {
+                                KeyValueMap = new Dictionary<string, int>
+                                {
+                                    { "CreditA", 10 },
+                                    { "CreditB", 0 },
+                                    { "Salary", 20 },
+                                }.ToImmutableDictionary(),
+                                Loaders = ImmutableList<ILoader>.Empty
+                            }
+                        }
+                    }.ToImmutableDictionary(),
                 }
             });
 

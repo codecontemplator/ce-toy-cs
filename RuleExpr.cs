@@ -52,7 +52,19 @@ namespace ce_toy_cs
             return new RuleExprAst<int> { Expression = resultFunc };
         }
 
-        public static RuleExprAst<ImmutableList<int>> GetValues(IEnumerable<string> applicantIds, string key)
+        public static RuleExprAst<ImmutableList<int>> GetValues(string key)
+        {
+            var getValuesImpl = typeof(Dsl).GetMethod("GetValuesImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            var applicants = Expression.Property(context, "Applicants");
+            var applicantIds = Expression.Property(applicants, "Keys");
+            var result = Expression.Call(getValuesImpl, applicantIds, Expression.Constant(key));
+            var resultExpression = Expression.Property(result, "Expression");
+            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(resultExpression, context), context);
+            return new RuleExprAst<ImmutableList<int>> { Expression = resultFunc };
+        }
+
+        private static RuleExprAst<ImmutableList<int>> GetValuesImpl(IEnumerable<string> applicantIds, string key)
         {
             Expression<Func<RuleExprContext, RuleExprAst<ImmutableList<int>>>> func = context =>
                     !applicantIds.Any() ?
@@ -60,11 +72,13 @@ namespace ce_toy_cs
                         :
                             SelectMany(
                                 GetValue(applicantIds.First(), key),
-                                _ => GetValues(applicantIds.Skip(1), key),
+                                _ => GetValuesImpl(applicantIds.Skip(1), key),
                                 (x, xs) => xs.Add(x));
 
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(func, context), context);
+            var result = Expression.Invoke(func, context);
+            var resultExpression = Expression.Property(result, "Expression");
+            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(resultExpression, context), context);
 
             return new RuleExprAst<ImmutableList<int>> { Expression = resultFunc };
         }
