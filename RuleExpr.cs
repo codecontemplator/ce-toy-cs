@@ -101,6 +101,16 @@ namespace ce_toy_cs
             return new RuleExprAst<T> { Expression = context => new Tuple<T, RuleExprContext>(value, context).ToValueTuple() };
         }
 
+        private static Expression MkTuple<T1, T2>(Expression t1, Expression t2)
+        {
+            var tupleConstructor = typeof(Tuple<T1, T2>).GetConstructor(new[] { typeof(T1), typeof(T2) });
+            var returnTuple = Expression.New(tupleConstructor, new Expression[] { t1, t2 });
+            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
+            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(T1), typeof(T2));
+            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
+            return returnValueTuple;
+        }
+
         public static RuleExprAst<U> Select<T, U>(this RuleExprAst<T> expr, Expression<Func<T, U>> convert)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
@@ -108,11 +118,8 @@ namespace ce_toy_cs
             var value = Expression.Field(valueAndNewContext, "Item1");
             var newContext = Expression.Field(valueAndNewContext, "Item2");
             var convertedValue = Expression.Invoke(convert, value);
-            var returnTuple = Expression.New(typeof(Tuple<U, RuleExprContext>).GetConstructor(new[] { typeof(U), typeof(RuleExprContext) }), new Expression[] { convertedValue, newContext });
-            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
-            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(U), typeof(RuleExprContext));
-            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
-            var resultFunc = Expression.Lambda<RuleExpr<U>>(returnValueTuple, context);
+            var returnValueTuple = MkTuple<U, RuleExprContext>(convertedValue, newContext);
+             var resultFunc = Expression.Lambda<RuleExpr<U>>(returnValueTuple, context);
             return new RuleExprAst<U> { Expression = resultFunc };
             //return context =>
             //{
@@ -134,11 +141,7 @@ namespace ce_toy_cs
             var finalContext = Expression.Field(finalValueAndContext, "Item2");
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
-            var tupleConstructor = typeof(Tuple<V, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) });
-            var returnTuple = Expression.New(tupleConstructor, new Expression[] { projectedValue, finalContext });
-            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
-            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(V), typeof(RuleExprContext));
-            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
+            var returnValueTuple = MkTuple<V, RuleExprContext>(projectedValue, finalContext);
             var resultFunc = Expression.Lambda<RuleExpr<V>>(returnValueTuple, context);
             return new RuleExprAst<V> { Expression = resultFunc };
 
@@ -150,6 +153,29 @@ namespace ce_toy_cs
             //};
         }
 
+
+
+        //private static Expression<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>> SequenceExpr<U>()
+        //{
+        //    var xsParam = Expression.Parameter(typeof(IEnumerable<RuleExprAst<U>>), "xs");
+        //    var methodVar = Expression.Variable(typeof(Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>), "sequence");
+        //    return Expression.Lambda<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>>(
+        //        Expression.Block(
+        //            new[] { methodVar },
+        //            Expression.Assign(
+        //                methodVar,
+        //                Expression.Lambda<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>>(
+        //                    Expression.IfThenElse(
+        //                        Expression.Condition(
+        //                            Expression.Equal(Expression.Constant(0), Expression.Property(xsParam, "Count")),
+
+        //                    xsParam
+        //                )
+        //            )
+        //        )
+        //    );
+        //}
+
         public static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
@@ -157,6 +183,7 @@ namespace ce_toy_cs
             var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
             var selectorResult = Expression.Invoke(selector, intermediateValue);
+
 
             Expression<
                 Func<
@@ -174,11 +201,7 @@ namespace ce_toy_cs
             var finalContext = Expression.Field(finalValueAndContext, "Item2");
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
-            var tupleConstructor = typeof(Tuple<IEnumerable<V>, RuleExprContext>).GetConstructor(new[] { typeof(IEnumerable<V>), typeof(RuleExprContext) });
-            var returnTuple = Expression.New(tupleConstructor, new Expression[] { projectedValue, finalContext });
-            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
-            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(IEnumerable<V>), typeof(RuleExprContext));
-            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
+            var returnValueTuple = MkTuple<IEnumerable<V>, RuleExprContext>(projectedValue, finalContext);
             var resultFunc = Expression.Lambda<RuleExpr<IEnumerable<V>>>(returnValueTuple, context);
             return new RuleExprAst<IEnumerable<V>> { Expression = resultFunc };
 
@@ -198,5 +221,6 @@ namespace ce_toy_cs
 
             return x.First().SelectMany(t => Sequence(x.Skip(1)), (t, ts) => ts.Add(t));
         }
+
     }
 }
