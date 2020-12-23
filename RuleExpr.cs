@@ -169,67 +169,65 @@ namespace ce_toy_cs
                 select values;
         }
 
-        public static R InvE<A1, R>(Func<A1, R> f, A1 a1) => f(a1);
-        //public static R InvE<A1, A2, R>(Func<A1, R> f, A1 a1, A2 a2) => f(a1, a2);
-
         public static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
         {
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
+            var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
+            var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
+            var selectorResult = Expression.Invoke(selector, intermediateValue);
+            var selectorResultExpression = Expression.Property(selectorResult, "Expression");
             Expression<
                 Func<
-                    Func<RuleExprContext, (T, RuleExprContext)>,
-                    Func<T, IEnumerable<RuleExprAst<U>>>,
-                    Func<T, IEnumerable<U>, IEnumerable<V>>,
-                    Func<
-                        RuleExprContext,
-                        IEnumerable<V>
-                    >
+                    IEnumerable<RuleExprAst<U>>,
+                    RuleExprAst<IEnumerable<U>>
                 >
-            > impl =
-                (exprImpl, selectorImpl, projectorImpl) =>
-                    context0 => 
-                        InvE(
-                              valueAndContext1 => 
-                                    InvE(
-                                        selectorImpl(valueAndContext1.Item1).Aggregate(valueAndContext1.Item2, (contextN, => ),
+            > finalValueAndContext = x => Sequence(x);
+    
+            var finalValue = Expression.Field(finalValueAndContext, "Item1");
+            var finalContext = Expression.Field(finalValueAndContext, "Item2");
+            var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
-                                    )
-                            , exprImpl(context0));
-
-            var boundFunc = Expression.Invoke(impl, expr.Expression, selector, projector);
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var resultFunc = Expression.Lambda(boundFunc, context);
-            return new RuleExprAst<IEnumerable<V>> { Expression = (Expression<RuleExpr<IEnumerable<V>>>)resultFunc };
+            var tupleConstructor = typeof(Tuple<V, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) });
+            var returnTuple = Expression.New(tupleConstructor, new Expression[] { projectedValue, finalContext });
+            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
+            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(V), typeof(RuleExprContext));
+            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
+            var resultFunc = Expression.Lambda<RuleExpr<IEnumerable<V>>>(returnValueTuple, context);
+            return new RuleExprAst<IEnumerable<V>> { Expression = resultFunc };
 
             //return context =>
             //{
             //    var (a, context1) = expr(context0);
             //    var fs = selector(a);                    
-            //    var (bs, contextn) = fold (\f (bs,ctx) -> f ctx) ([],context1) fs
-            //    return (projector(a, b1,b2,...), contextn);
+            //    var (bs, contextn) = sequence fs      // sequence :: IEnumerable<RuleExprAst<U>> -> RuleExprAst<IEnumerable<U>>
+            //    return (projector(a, bs), contextn);
             //};
-
-            // return context =>
-                    
         }
 
-        public static T Inv<A,T>(Func<A,T> f, A a) => f(a);
-
-        public static void X<T,U,V>()
+        private static RuleExprAst<IEnumerable<T>> Sequence<T>(IEnumerable<RuleExprAst<T>> x)
         {
-            var x = new List<int>();
-            var s = x.Aggregate("", (acc, i) => acc + i.ToString());
-
-            Func<
-                Func<RuleExprContext, T>,
-                Func<T, IEnumerable<RuleExprAst<U>>>,
-                Func<T, IEnumerable<U>, IEnumerable<V>>,
-                Func<
-                    RuleExprContext,
-                    IEnumerable<V>
-                >
-            > f = (exprImpl, selectorImpl, projectorImpl) =>
-                    context0 => Inv(x => new V[] { }, 20);
-
+            throw new NotImplementedException();
         }
+
+        //public static T Inv<A,T>(Func<A,T> f, A a) => f(a);
+
+        //public static void X<T,U,V>()
+        //{
+        //    var x = new List<int>();
+        //    var s = x.Aggregate("", (acc, i) => acc + i.ToString());
+
+        //    Func<
+        //        Func<RuleExprContext, T>,
+        //        Func<T, IEnumerable<RuleExprAst<U>>>,
+        //        Func<T, IEnumerable<U>, IEnumerable<V>>,
+        //        Func<
+        //            RuleExprContext,
+        //            IEnumerable<V>
+        //        >
+        //    > f = (exprImpl, selectorImpl, projectorImpl) =>
+        //            context0 => Inv(x => new V[] { }, 20);
+
+        //}
     }
 }
