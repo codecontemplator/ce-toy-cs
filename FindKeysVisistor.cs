@@ -15,9 +15,10 @@ namespace ce_toy_cs
                 var keyArg = node.Arguments.Single() as ConstantExpression;
                 var key = keyArg.Value as string;
                 FoundKeys.Add(key);
+                return node;
             }
-
-            return base.VisitMethodCall(node);
+            else
+                return base.VisitMethodCall(node);
         }
     }
 }

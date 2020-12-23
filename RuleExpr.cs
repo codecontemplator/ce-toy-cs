@@ -176,7 +176,6 @@ namespace ce_toy_cs
             var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
             var selectorResult = Expression.Invoke(selector, intermediateValue);
-            var selectorResultExpression = Expression.Property(selectorResult, "Expression");
 
             Expression<
                 Func<
@@ -185,16 +184,19 @@ namespace ce_toy_cs
                 >
             > sequencer = x => Sequence(x);
 
-            var finalValueAndContext = Expression.Invoke(sequencer, selectorResultExpression);
-    
+            var sequencedResult = Expression.Invoke(sequencer, selectorResult);
+            var sequencedResultExpression = Expression.Property(sequencedResult, "Expression");
+
+            var finalValueAndContext = Expression.Invoke(sequencedResultExpression, context);
+
             var finalValue = Expression.Field(finalValueAndContext, "Item1");
             var finalContext = Expression.Field(finalValueAndContext, "Item2");
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
-            var tupleConstructor = typeof(Tuple<V, RuleExprContext>).GetConstructor(new[] { typeof(V), typeof(RuleExprContext) });
+            var tupleConstructor = typeof(Tuple<IEnumerable<V>, RuleExprContext>).GetConstructor(new[] { typeof(IEnumerable<V>), typeof(RuleExprContext) });
             var returnTuple = Expression.New(tupleConstructor, new Expression[] { projectedValue, finalContext });
             var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
-            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(V), typeof(RuleExprContext));
+            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(IEnumerable<V>), typeof(RuleExprContext));
             var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
             var resultFunc = Expression.Lambda<RuleExpr<IEnumerable<V>>>(returnValueTuple, context);
             return new RuleExprAst<IEnumerable<V>> { Expression = resultFunc };
@@ -213,7 +215,7 @@ namespace ce_toy_cs
             if (!x.Any())
                 return Wrap(ImmutableList<T>.Empty);
 
-            return x.First().SelectMany(t => Sequence(x.Skip(0)), (t, ts) => ts.Add(t));
+            return x.First().SelectMany(t => Sequence(x.Skip(1)), (t, ts) => ts.Add(t));
         }
     }
 }
