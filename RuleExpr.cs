@@ -61,25 +61,6 @@ namespace ce_toy_cs
                 };
         }
 
-        private static RuleExprAst<ImmutableList<int>> GetValuesImpl(IEnumerable<string> applicantIds, string key)
-        {
-            Expression<Func<RuleExprContext, RuleExprAst<ImmutableList<int>>>> func = context =>
-                    !applicantIds.Any() ?
-                            Wrap(ImmutableList<int>.Empty)
-                        :
-                            SelectMany(
-                                GetValue(applicantIds.First(), key),
-                                _ => GetValuesImpl(applicantIds.Skip(1), key),
-                                (x, xs) => xs.Add(x));
-
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var result = Expression.Invoke(func, context);
-            var resultExpression = Expression.Property(result, "Expression");
-            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(resultExpression, context), context);
-
-            return new RuleExprAst<ImmutableList<int>> { Expression = resultFunc };
-        }
-
         private static RuleExpr<int> GetValueImpl(string applicantId, string key)
         {
 
