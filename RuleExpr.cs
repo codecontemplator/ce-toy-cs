@@ -17,7 +17,7 @@ namespace ce_toy_cs
     public record RuleExprContext
     {
         public int Amount { get; init; }
-        public ImmutableDictionary<string,Applicant> Applicants { get; init; }
+        public ImmutableDictionary<string, Applicant> Applicants { get; init; }
     }
 
     public record RuleExprAst<T>
@@ -36,7 +36,7 @@ namespace ce_toy_cs
     {
         public static RuleExprAst<int> GetAmount()
         {
-            return 
+            return
                 new RuleExprAst<int>
                 {
                     Expression = (context => new Tuple<int, RuleExprContext>(context.Amount, context).ToValueTuple())
@@ -52,23 +52,20 @@ namespace ce_toy_cs
                 };
         }
 
-        public static RuleExprAst<ImmutableList<int>> GetValues(string key)
+        public static RuleExprAst<ImmutableDictionary<string, Applicant>> GetApplicants()
         {
-            var getValuesImpl = typeof(Dsl).GetMethod("GetValuesImpl", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var applicants = Expression.Property(context, "Applicants");
-            var applicantIds = Expression.Property(applicants, "Keys");
-            var result = Expression.Call(getValuesImpl, applicantIds, Expression.Constant(key));
-            var resultExpression = Expression.Property(result, "Expression");
-            var resultFunc = Expression.Lambda<RuleExpr<ImmutableList<int>>>(Expression.Invoke(resultExpression, context), context);
-            return new RuleExprAst<ImmutableList<int>> { Expression = resultFunc };
+            return
+                new RuleExprAst<ImmutableDictionary<string, Applicant>>
+                {
+                    Expression = (context => new Tuple<ImmutableDictionary<string, Applicant>, RuleExprContext>(context.Applicants, context).ToValueTuple())
+                };
         }
 
         private static RuleExprAst<ImmutableList<int>> GetValuesImpl(IEnumerable<string> applicantIds, string key)
         {
             Expression<Func<RuleExprContext, RuleExprAst<ImmutableList<int>>>> func = context =>
                     !applicantIds.Any() ?
-                            Wrap(ImmutableList<int>.Empty) 
+                            Wrap(ImmutableList<int>.Empty)
                         :
                             SelectMany(
                                 GetValue(applicantIds.First(), key),
@@ -90,7 +87,7 @@ namespace ce_toy_cs
             {
                 if (!context.Applicants.TryGetValue(applicantId, out var applicant))
                     throw new Exception($"Applicant {applicantId} not found");
-                
+
                 if (applicant.KeyValueMap.TryGetValue(key, out var value))
                     return (value, context);
 
@@ -112,7 +109,7 @@ namespace ce_toy_cs
 
         public static RuleExprAst<T> Wrap<T>(T value)
         {
-            return new RuleExprAst<T> { Expression = context => new Tuple<T,RuleExprContext>(value, context).ToValueTuple() };
+            return new RuleExprAst<T> { Expression = context => new Tuple<T, RuleExprContext>(value, context).ToValueTuple() };
         }
 
         public static RuleExprAst<U> Select<T, U>(this RuleExprAst<T> expr, Expression<Func<T, U>> convert)
@@ -162,6 +159,77 @@ namespace ce_toy_cs
             //    var (b, context3) = selector(a)(context2);
             //    return (projector(a, b), context3);
             //};
+        }
+
+        public static RuleExprAst<IEnumerable<int>> GetValues(string key)
+        {
+            return
+                from applicants in GetApplicants()
+                from values in (from applicantId in applicants.Keys select GetValue(applicantId, key))
+                select values;
+        }
+
+        public static R InvE<A1, R>(Func<A1, R> f, A1 a1) => f(a1);
+        //public static R InvE<A1, A2, R>(Func<A1, R> f, A1 a1, A2 a2) => f(a1, a2);
+
+        public static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
+        {
+            Expression<
+                Func<
+                    Func<RuleExprContext, (T, RuleExprContext)>,
+                    Func<T, IEnumerable<RuleExprAst<U>>>,
+                    Func<T, IEnumerable<U>, IEnumerable<V>>,
+                    Func<
+                        RuleExprContext,
+                        IEnumerable<V>
+                    >
+                >
+            > impl =
+                (exprImpl, selectorImpl, projectorImpl) =>
+                    context0 => 
+                        InvE(
+                              valueAndContext1 => 
+                                    InvE(
+                                        selectorImpl(valueAndContext1.Item1).Aggregate(valueAndContext1.Item2, (contextN, => ),
+
+                                    )
+                            , exprImpl(context0));
+
+            var boundFunc = Expression.Invoke(impl, expr.Expression, selector, projector);
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            var resultFunc = Expression.Lambda(boundFunc, context);
+            return new RuleExprAst<IEnumerable<V>> { Expression = (Expression<RuleExpr<IEnumerable<V>>>)resultFunc };
+
+            //return context =>
+            //{
+            //    var (a, context1) = expr(context0);
+            //    var fs = selector(a);                    
+            //    var (bs, contextn) = fold (\f (bs,ctx) -> f ctx) ([],context1) fs
+            //    return (projector(a, b1,b2,...), contextn);
+            //};
+
+            // return context =>
+                    
+        }
+
+        public static T Inv<A,T>(Func<A,T> f, A a) => f(a);
+
+        public static void X<T,U,V>()
+        {
+            var x = new List<int>();
+            var s = x.Aggregate("", (acc, i) => acc + i.ToString());
+
+            Func<
+                Func<RuleExprContext, T>,
+                Func<T, IEnumerable<RuleExprAst<U>>>,
+                Func<T, IEnumerable<U>, IEnumerable<V>>,
+                Func<
+                    RuleExprContext,
+                    IEnumerable<V>
+                >
+            > f = (exprImpl, selectorImpl, projectorImpl) =>
+                    context0 => Inv(x => new V[] { }, 20);
+
         }
     }
 }
