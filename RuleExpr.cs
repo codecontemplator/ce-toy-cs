@@ -177,12 +177,15 @@ namespace ce_toy_cs
             var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
             var selectorResult = Expression.Invoke(selector, intermediateValue);
             var selectorResultExpression = Expression.Property(selectorResult, "Expression");
+
             Expression<
                 Func<
                     IEnumerable<RuleExprAst<U>>,
-                    RuleExprAst<IEnumerable<U>>
+                    RuleExprAst<ImmutableList<U>>
                 >
-            > finalValueAndContext = x => Sequence(x);
+            > sequencer = x => Sequence(x);
+
+            var finalValueAndContext = Expression.Invoke(sequencer, selectorResultExpression);
     
             var finalValue = Expression.Field(finalValueAndContext, "Item1");
             var finalContext = Expression.Field(finalValueAndContext, "Item2");
@@ -205,29 +208,12 @@ namespace ce_toy_cs
             //};
         }
 
-        private static RuleExprAst<IEnumerable<T>> Sequence<T>(IEnumerable<RuleExprAst<T>> x)
+        private static RuleExprAst<ImmutableList<T>> Sequence<T>(IEnumerable<RuleExprAst<T>> x)
         {
-            throw new NotImplementedException();
+            if (!x.Any())
+                return Wrap(ImmutableList<T>.Empty);
+
+            return x.First().SelectMany(t => Sequence(x.Skip(0)), (t, ts) => ts.Add(t));
         }
-
-        //public static T Inv<A,T>(Func<A,T> f, A a) => f(a);
-
-        //public static void X<T,U,V>()
-        //{
-        //    var x = new List<int>();
-        //    var s = x.Aggregate("", (acc, i) => acc + i.ToString());
-
-        //    Func<
-        //        Func<RuleExprContext, T>,
-        //        Func<T, IEnumerable<RuleExprAst<U>>>,
-        //        Func<T, IEnumerable<U>, IEnumerable<V>>,
-        //        Func<
-        //            RuleExprContext,
-        //            IEnumerable<V>
-        //        >
-        //    > f = (exprImpl, selectorImpl, projectorImpl) =>
-        //            context0 => Inv(x => new V[] { }, 20);
-
-        //}
     }
 }
