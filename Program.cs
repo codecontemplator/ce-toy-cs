@@ -47,7 +47,7 @@ namespace ce_toy_cs
                                 {
                                     { "CreditA", 10 },
                                     { "CreditB", 0 },
-                                    { "Salary", 20 },
+                                    { "Salary", 41 },
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty
                             }

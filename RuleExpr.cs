@@ -61,6 +61,14 @@ namespace ce_toy_cs
                 };
         }
 
+        public static RuleExprAst<IEnumerable<int>> GetValues(string key)
+        {
+            return
+                from applicants in GetApplicants()
+                from values in (from applicantId in applicants.Keys select GetValue(applicantId, key))
+                select values;
+        }
+
         private static RuleExpr<int> GetValueImpl(string applicantId, string key)
         {
 
@@ -140,14 +148,6 @@ namespace ce_toy_cs
             //    var (b, context3) = selector(a)(context2);
             //    return (projector(a, b), context3);
             //};
-        }
-
-        public static RuleExprAst<IEnumerable<int>> GetValues(string key)
-        {
-            return
-                from applicants in GetApplicants()
-                from values in (from applicantId in applicants.Keys select GetValue(applicantId, key))
-                select values;
         }
 
         public static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
