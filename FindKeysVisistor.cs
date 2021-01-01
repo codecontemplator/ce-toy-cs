@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -10,8 +11,10 @@ namespace ce_toy_cs
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
+            Debug.WriteLine(node.Method.Name);
             if (node.Method.Name == "GetValue")
             {
+                // Never called :(
                 var keyArg = node.Arguments.Single() as ConstantExpression;
                 var key = keyArg.Value as string;
                 FoundKeys.Add(key);
@@ -19,7 +22,11 @@ namespace ce_toy_cs
             }
             else if (node.Method.Name == "GetValues")
             {
-                return base.VisitMethodCall(node);
+                // Not really a good solution to track calls to getvalues... :(
+                var keyArg = node.Arguments.Single() as ConstantExpression;
+                var key = keyArg.Value as string;
+                FoundKeys.Add(key);
+                return node;
             }
             else
                 return base.VisitMethodCall(node);
