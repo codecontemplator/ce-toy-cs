@@ -17,6 +17,10 @@ namespace ce_toy_cs
                 FoundKeys.Add(key);
                 return node;
             }
+            else if (node.Method.Name == "GetValues")
+            {
+                return base.VisitMethodCall(node);
+            }
             else
                 return base.VisitMethodCall(node);
         }

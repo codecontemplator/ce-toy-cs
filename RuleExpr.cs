@@ -119,7 +119,7 @@ namespace ce_toy_cs
             var newContext = Expression.Field(valueAndNewContext, "Item2");
             var convertedValue = Expression.Invoke(convert, value);
             var returnValueTuple = MkTuple<U, RuleExprContext>(convertedValue, newContext);
-             var resultFunc = Expression.Lambda<RuleExpr<U>>(returnValueTuple, context);
+            var resultFunc = Expression.Lambda<RuleExpr<U>>(returnValueTuple, context);
             return new RuleExprAst<U> { Expression = resultFunc };
             //return context =>
             //{
@@ -185,13 +185,14 @@ namespace ce_toy_cs
             var selectorResult = Expression.Invoke(selector, intermediateValue);
 
 
-            Expression<
-                Func<
-                    IEnumerable<RuleExprAst<U>>,
-                    RuleExprAst<ImmutableList<U>>
-                >
-            > sequencer = x => Sequence(x);
+            //Expression<
+            //    Func<
+            //        IEnumerable<RuleExprAst<U>>,
+            //        RuleExprAst<ImmutableList<U>>
+            //    >
+            //> sequencer = x => Sequence(x);
 
+            var sequencer = MkSequencer<U>();
             var sequencedResult = Expression.Invoke(sequencer, selectorResult);
             var sequencedResultExpression = Expression.Property(sequencedResult, "Expression");
 
@@ -214,13 +215,106 @@ namespace ce_toy_cs
             //};
         }
 
-        private static RuleExprAst<ImmutableList<T>> Sequence<T>(IEnumerable<RuleExprAst<T>> x)
-        {
-            if (!x.Any())
-                return Wrap(ImmutableList<T>.Empty);
+        //private static RuleExprAst<ImmutableList<T>> Sequence<T>(IEnumerable<RuleExprAst<T>> x)
+        //{
+        //    if (!x.Any())
+        //        return Wrap(ImmutableList<T>.Empty);
 
-            return x.First().SelectMany(t => Sequence(x.Skip(1)), (t, ts) => ts.Add(t));
+        //    return x.First().SelectMany(t => Sequence(x.Skip(1)), (t, ts) => ts.Add(t));
+        //}
+
+        //private static RuleExprAst<ImmutableList<U>> PlaceHolder<U>(IEnumerable<RuleExprAst<U>> arg)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        // Ref: https://chriscavanagh.wordpress.com/2012/06/18/recursive-methods-in-expression-trees/
+        //private static Expression<Func<Func<T, T>, T>> MkFix<T>()
+        //{
+        //    var fParam = Expression.Parameter(typeof(Func<T, T>), "f");
+        //    var xParam = Expression.Parameter(typeof(string), "x");  // Can be any type
+        //    var methodVar = Expression.Variable(typeof(Func<Func<T, T>, T>), "fix");
+        //    return 
+        //        Expression.Lambda<Func<Func<T, T>, T>>(
+        //            Expression.Block(
+        //                new[] { methodVar },
+        //                Expression.Assign(
+        //                    methodVar,
+        //                    Expression.Lambda(
+        //                        Expression.Invoke(
+        //                            Expression.Lambda(
+        //                                    Expression.Invoke(fParam, Expression.Invoke(methodVar, fParam)),
+        //                                    xParam),
+        //                            Expression.Constant(string.Empty)
+        //                        ),
+        //                        fParam
+        //                    )
+        //                ),
+        //                Expression.Invoke(methodVar, fParam)
+        //            ), 
+        //            fParam
+        //        );
+        //}
+
+        public delegate RuleExprAst<ImmutableList<T>> SequencerDelegate<T>(IEnumerable<RuleExprAst<T>> input);
+
+        //private static Expression<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>> MkSequencer<U>()
+        private static Expression<SequencerDelegate<U>> MkSequencer<U>()
+        {
+            Expression<
+                Func<
+                    Func<IEnumerable<RuleExprAst<U>>,RuleExprAst<ImmutableList<U>>>,
+                    Func<IEnumerable<RuleExprAst<U>>,RuleExprAst<ImmutableList<U>>>
+                >
+            > sequenceNonRecursive = f => xs => 
+                    !xs.Any() 
+                        ?
+                            Wrap(ImmutableList<U>.Empty) 
+                        :
+                            xs.First().SelectMany(t => f(xs.Skip(1)), (t, ts) => ts.Add(t));
+
+            var fixExpression = YCombinator<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>.Fix;
+            var sequence = Expression.Invoke(fixExpression, sequenceNonRecursive);
+
+            //InvocationExpression sequence = Expression.Invoke(MkFix<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>>(), sequenceNonRecursive);
+             
+            var arg = Expression.Parameter(typeof(IEnumerable<RuleExprAst<U>>), "arg");
+
+            Expression<SequencerDelegate<U>> e = Expression.Lambda<SequencerDelegate<U>>(Expression.Invoke(sequence, arg), arg);
+
+            //Expression<
+            //    Func<
+            //        IEnumerable<RuleExprAst<U>>,
+            //        RuleExprAst<ImmutableList<U>>
+            //    >
+            //> e = Expression.Lambda<SequencerDelegate<U>>(sequence, arg);
+
+            //(Expression<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>>)Expression.Lambda(sequence, arg);
+
+
+            return e;
         }
 
+        //private class TieRecursiveKnotVisistor<U> : ExpressionVisitor
+        //{
+        //    private Expression<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>> e;
+
+        //    public TieRecursiveKnotVisistor(Expression<Func<IEnumerable<RuleExprAst<U>>, RuleExprAst<ImmutableList<U>>>> e)
+        //    {
+        //        this.e = e;
+        //    }
+
+        //    protected override Expression VisitMethodCall(MethodCallExpression node)
+        //    {
+        //        if (node.Method.Name == "PlaceHolder")
+        //        {
+        //            return Expression.Invoke(e, node.Arguments);
+        //        }
+        //        else
+        //        {
+        //            return base.VisitMethodCall(node);
+        //        }
+        //    }
+        //}
     }
 }
