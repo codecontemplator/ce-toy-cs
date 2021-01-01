@@ -1,0 +1,98 @@
+﻿<#@ output extension=".fs" #>
+// -----------------------------------------------------------------------------
+// THIS FILE IS GENERATED FROM: FsModel.tt
+//  Changes to this file will be lost when the files is regenerated
+// -----------------------------------------------------------------------------
+
+namespace FsDepedencies
+
+<#
+  var model = new Variable[] 
+    {
+        constVariable("Amount"  , "decimal", "0.0M")
+      , constVariable("CreditA" , "decimal", "0.0M")
+      , constVariable("CreditB" , "decimal", "0.0M")
+      , constVariable("CreditC" , "decimal", "0.0M")
+    };
+#>
+
+module Model =
+  open System
+  open System.Collections.Generic
+
+  open Core
+
+<#
+  foreach (var variable in model)
+  {
+#>
+  type [<Interface; Variable>] I<#=variable.Name#>Variable = abstract <#=variable.Name#> : <#=variable.Type#>
+  let meta<#=variable.Name#> = constVariable<I<#=variable.Name#>Variable, <#=variable.Type#>> "<#=variable.Name#>" <#=variable.DefaultValue#>
+  let get<#=variable.Name#> (env : #I<#=variable.Name#>Variable) = env.<#=variable.Name#>
+<#
+  }
+#>
+
+  let metaVariables : MetaVariable array =
+    [|
+<#
+  foreach (var variable in model)
+  {
+#>
+      meta<#=variable.Name#>
+<#
+  }
+#>
+    |]
+
+  let domainTypes =
+    metaVariables
+    |> Array.map (fun mv -> mv.DomainType, mv)
+    |> dict
+
+  type Env (evaluators : IDictionary<Type, MetaVariableEvaluator>) =
+    class
+      let lookup (mv : MetaVariable<'DT, 'VT>) : 'VT =
+        let name  = mv.Name
+        let dt    = mv.DomainType
+        let b, ue = evaluators.TryGetValue dt
+        if b then
+          match ue with
+          | (:? MetaVariableEvaluator<'DT, 'VT> as e) -> e.Eval ()
+          | v                                         ->
+            let lt = v.GetType()
+            let et = typeof<'VT>
+            failwithf "Variable '%s' loaded but type mismatch. Loaded: %s, requested: %s" name lt.Name et.Name
+        else
+          failwithf "Variable '%s' not loaded" name
+<#
+  foreach (var variable in model)
+  {
+#>
+      interface I<#=variable.Name#>Variable with
+        member x.<#=variable.Name#> = lookup meta<#=variable.Name#>
+      end
+<#
+  }
+#>
+    end
+  let env = Env (dict [||])
+<#+
+  class Variable
+  {
+    public readonly string Name         ;
+    public readonly string Type         ;
+    public readonly string DefaultValue ;
+    public Variable(string name, string type, string defaultValue)
+    {
+      Name          = name          ?? "";
+      Type          = type          ?? "";
+      DefaultValue  = defaultValue  ?? "";
+    }
+  }
+
+  Variable constVariable(string name, string type, string defaultValue)
+  {
+    return new Variable(name, type, defaultValue);
+  }
+#>
