@@ -1,0 +1,51 @@
+﻿<#@ output extension=".cs" #>
+// -----------------------------------------------------------------------------
+// THIS FILE IS GENERATED FROM: FsModel.tt
+//  Changes to this file will be lost when the files is regenerated
+// -----------------------------------------------------------------------------
+
+<#
+  var model = new Variable[] 
+    {
+        constVariable("Amount"  , "decimal", "0.0M")
+      , constVariable("CreditA" , "decimal", "0.0M")
+      , constVariable("CreditB" , "decimal", "0.0M")
+      , constVariable("CreditC" , "decimal", "0.0M")
+    };
+#>
+
+namespace CsCollectVariables
+{
+  public static partial class Variables
+  {
+<#
+  foreach (var variable in model)
+  {
+#>
+
+    public sealed class <#=variable.Name#>Tag   {}
+    public static readonly VariableDefinition<<#=variable.Name#>Tag, <#=variable.Type#>> <#=variable.Name#> = new VariableDefinition<<#=variable.Name#>Tag, <#=variable.Type#>>("<#=variable.Name#>", <#=variable.DefaultValue#>);
+<#
+  }
+#>
+  }
+}
+<#+
+  class Variable
+  {
+    public readonly string Name         ;
+    public readonly string Type         ;
+    public readonly string DefaultValue ;
+    public Variable(string name, string type, string defaultValue)
+    {
+      Name          = name          ?? "";
+      Type          = type          ?? "";
+      DefaultValue  = defaultValue  ?? "";
+    }
+  }
+
+  Variable constVariable(string name, string type, string defaultValue)
+  {
+    return new Variable(name, type, defaultValue);
+  }
+#>
