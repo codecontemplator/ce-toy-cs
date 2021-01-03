@@ -11,7 +11,7 @@ namespace ce_toy_cs
     public record Applicant
     {
         public IEnumerable<ILoader> Loaders { get; init; }
-        public ImmutableDictionary<string, int> KeyValueMap { get; init; }
+        public ImmutableDictionary<string, object> KeyValueMap { get; init; }
     }
 
     public record RuleExprContext
@@ -43,16 +43,29 @@ namespace ce_toy_cs
                 };
         }
 
-        public static RuleExprAst<int> GetValue(string applicantId, string key)
+        public static RuleExprAst<IEnumerable<T>> GetValues<T>(string key)
+        {
+            return GetValues<T>(key, x => true);
+        }
+
+        public static RuleExprAst<IEnumerable<T>> GetValues<T>(string key, Predicate<Applicant> predicate)
         {
             return
-                new RuleExprAst<int>
+                from applicants in GetApplicants()
+                from values in (from applicantId in applicants.Keys where predicate(applicants[applicantId]) select GetValue<T>(applicantId, key))
+                select values;
+        }
+
+        private static RuleExprAst<T> GetValue<T>(string applicantId, string key)
+        {
+            return
+                new RuleExprAst<T>
                 {
-                    Expression = context => GetValueImpl(applicantId, key)(context)
+                    Expression = context => GetValueImpl<T>(applicantId, key)(context)
                 };
         }
 
-        public static RuleExprAst<ImmutableDictionary<string, Applicant>> GetApplicants()
+        private static RuleExprAst<ImmutableDictionary<string, Applicant>> GetApplicants()
         {
             return
                 new RuleExprAst<ImmutableDictionary<string, Applicant>>
@@ -61,15 +74,8 @@ namespace ce_toy_cs
                 };
         }
 
-        public static RuleExprAst<IEnumerable<int>> GetValues(string key)
-        {
-            return
-                from applicants in GetApplicants()
-                from values in (from applicantId in applicants.Keys select GetValue(applicantId, key))
-                select values;
-        }
 
-        private static RuleExpr<int> GetValueImpl(string applicantId, string key)
+        private static RuleExpr<T> GetValueImpl<T>(string applicantId, string key)
         {
 
             return context =>
@@ -78,7 +84,12 @@ namespace ce_toy_cs
                     throw new Exception($"Applicant {applicantId} not found");
 
                 if (applicant.KeyValueMap.TryGetValue(key, out var value))
-                    return (value, context);
+                {
+                    if (!(value is T))
+                        throw new Exception($"Failed to retrieve value for key {key} for applicant {applicantId} due to type mismatch. Got {value.GetType().Name}, expected {typeof(T).Name}");
+
+                    return ((T)value, context);
+                }
 
                 if (!applicant.Loaders.Any())
                     throw new Exception($"Failed to load value for key {key} for applicant {applicantId}");
@@ -92,11 +103,11 @@ namespace ce_toy_cs
                     })
                 };
 
-                return GetValueImpl(applicantId, key)(newContext);
+                return GetValueImpl<T>(applicantId, key)(newContext);
             };
         }
 
-        public static RuleExprAst<T> Wrap<T>(T value)
+        private static RuleExprAst<T> Wrap<T>(T value)
         {
             return new RuleExprAst<T> { Expression = context => new Tuple<T, RuleExprContext>(value, context).ToValueTuple() };
         }
@@ -153,7 +164,7 @@ namespace ce_toy_cs
             //};
         }
 
-        public static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
+        private static RuleExprAst<IEnumerable<V>> SelectMany<T, U, V>(this RuleExprAst<T> expr, Expression<Func<T, IEnumerable<RuleExprAst<U>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
             var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);

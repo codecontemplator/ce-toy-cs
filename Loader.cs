@@ -7,7 +7,6 @@ namespace ce_toy_cs
         string Name { get; }
         int Cost { get; }
         IImmutableSet<string> Keys { get; }
-        ImmutableDictionary<string, int> Load(string key, ImmutableDictionary<string, int> input);
+        ImmutableDictionary<string, object> Load(string key, ImmutableDictionary<string, object> input);
     }
-
 }

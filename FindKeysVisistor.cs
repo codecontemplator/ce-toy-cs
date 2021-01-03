@@ -12,18 +12,9 @@ namespace ce_toy_cs
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             Debug.WriteLine(node.Method.Name);
-            if (node.Method.Name == "GetValue")
+            if (node.Method.Name == "GetValues")
             {
-                // Never called :(
-                var keyArg = node.Arguments.Single() as ConstantExpression;
-                var key = keyArg.Value as string;
-                FoundKeys.Add(key);
-                return node;
-            }
-            else if (node.Method.Name == "GetValues")
-            {
-                // Not really a good solution to track calls to getvalues... :(
-                var keyArg = node.Arguments.Single() as ConstantExpression;
+                var keyArg = node.Arguments.Single() as ConstantExpression;  // TODO: handle predicate overload 
                 var key = keyArg.Value as string;
                 FoundKeys.Add(key);
                 return node;

@@ -11,12 +11,6 @@ namespace ce_toy_cs
             var process = Process.GetProcess();
 
             Console.WriteLine($"Process uses keys: {string.Join(',', process.GetKeys())}");
-            var builder = ImmutableDictionary.CreateBuilder<string, int>();
-            builder.Add("CreditA", 100);
-            builder.Add("CreditB", 2);
-            builder.Add("Salary", 20);
-
-            var x = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } }.ToImmutableDictionary();
 
             var result = process.Eval(new RuleContext
             {
@@ -30,10 +24,10 @@ namespace ce_toy_cs
                             "applicant1",
                             new Applicant
                             {
-                                KeyValueMap = new Dictionary<string, int>
+                                KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 100 },
-                                    { "CreditB", 2 },
+                                    { "CreditA", 100.0 },
+                                    { "CreditB", 2.2 },
                                     { "Salary", 10 },
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty
@@ -43,10 +37,10 @@ namespace ce_toy_cs
                             "applicant2",
                             new Applicant
                             {
-                                KeyValueMap = new Dictionary<string, int>
+                                KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 10 },
-                                    { "CreditB", 0 },
+                                    { "CreditA", 10.2 },
+                                    { "CreditB", 0.0 },
                                     { "Salary", 41 },
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty

@@ -28,7 +28,7 @@ namespace ce_toy_cs
         {
             return
                 from amount in Dsl.GetAmount()
-                from salaries in Dsl.GetValues("Salary")
+                from salaries in Dsl.GetValues<int>("Salary")
                 select salaries.Sum() < salaryLimit ? 0 : amount;
         }
 
