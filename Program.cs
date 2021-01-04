@@ -24,10 +24,11 @@ namespace ce_toy_cs
                             "applicant1",
                             new Applicant
                             {
+                                Id = "applicant1",
                                 KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 100.0 },
-                                    { "CreditB", 2.2 },
+                                    { "CreditA", 20.0 },
+                                    { "CreditB", 29.0 },
                                     { "Salary", 10 },
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty
@@ -37,10 +38,11 @@ namespace ce_toy_cs
                             "applicant2",
                             new Applicant
                             {
+                                Id = "applicant2",
                                 KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 10.2 },
-                                    { "CreditB", 0.0 },
+                                    { "CreditA", 10.0 },
+                                    { "CreditB", 39.0 },
                                     { "Salary", 41 },
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty

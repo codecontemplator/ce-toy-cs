@@ -8,19 +8,21 @@ namespace ce_toy_cs
 
     public record Applicant
     {
+        public string Id { get; init; }
         public IEnumerable<ILoader> Loaders { get; init; }
         public ImmutableDictionary<string, object> KeyValueMap { get; init; }
     }
 
-    public interface IRuleExprContext
-    {
-        public int Amount { get; }
-    }
-
-    public record MRuleExprContext : IRuleExprContext
+    public record MRuleExprContext
     {
         public int Amount { get; init; }
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
+    }
+
+    public record SRuleExprContext
+    {
+        public int Amount { get; init; }
+        public Applicant Applicant { get; init; }
     }
 
     public record RuleExprAst<T, RuleExprContext>

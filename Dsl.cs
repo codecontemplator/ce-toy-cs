@@ -2,21 +2,68 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ce_toy_cs
 {
-    static class Dsl
+    static class SDsl
     {
-        public static RuleExprAst<int, MRuleExprContext> GetAmount() => GetAmount<MRuleExprContext>();
-
-        public static RuleExprAst<int, RuleExprContext> GetAmount<RuleExprContext>() where RuleExprContext : IRuleExprContext
+        public static RuleExprAst<int, SRuleExprContext> GetAmount()
         {
             return
-                new RuleExprAst<int, RuleExprContext>
+                new RuleExprAst<int, SRuleExprContext>
                 {
-                    Expression = (context => new Tuple<int, RuleExprContext>(context.Amount, context).ToValueTuple())
+                    Expression = (context => new Tuple<int, SRuleExprContext>(context.Amount, context).ToValueTuple())
+                };
+        }
+
+        public static RuleExprAst<T, SRuleExprContext> GetValue<T>(string key)
+        {
+            return
+                new RuleExprAst<T, SRuleExprContext>
+                {
+                    Expression = context => GetValueImpl<T>(key)(context)
+                };
+        }
+
+        private static RuleExpr<T, SRuleExprContext> GetValueImpl<T>(string key)
+        {
+
+            return context =>
+            {
+                var applicant = context.Applicant;
+                if (applicant.KeyValueMap.TryGetValue(key, out var value))
+                {
+                    if (!(value is T))
+                        throw new Exception($"Failed to retrieve value for key {key} for applicant {applicant.Id} due to type mismatch. Got {value.GetType().Name}, expected {typeof(T).Name}");
+
+                    return ((T)value, context);
+                }
+
+                if (!applicant.Loaders.Any())
+                    throw new Exception($"Failed to load value for key {key} for applicant {applicant.Id}");
+
+                var newContext = context with
+                {
+                    Applicant = applicant with
+                    {
+                        Loaders = applicant.Loaders.Skip(1),
+                        KeyValueMap = applicant.Loaders.First().Load(key, applicant.KeyValueMap)
+                    }
+                };
+
+                return GetValueImpl<T>(key)(newContext);
+            };
+        }
+    }
+
+    static class MDsl
+    {
+        public static RuleExprAst<int, MRuleExprContext> GetAmount()
+        {
+            return
+                new RuleExprAst<int, MRuleExprContext>
+                {
+                    Expression = (context => new Tuple<int, MRuleExprContext>(context.Amount, context).ToValueTuple())
                 };
         }
 
@@ -42,7 +89,7 @@ namespace ce_toy_cs
                 };
         }
 
-        private static RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext> GetApplicants()
+        public static RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext> GetApplicants()
         {
             return
                 new RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext>
@@ -82,6 +129,5 @@ namespace ce_toy_cs
                 return GetValueImpl<T>(applicantId, key)(newContext);
             };
         }
-
     }
 }

@@ -19,6 +19,10 @@ namespace ce_toy_cs
                 FoundKeys.Add(key);
                 return node;
             }
+            else if (node.Method.Name == "Lift")
+            {
+                return base.VisitMethodCall(node);  // TODO
+            }
             else
                 return base.VisitMethodCall(node);
         }
