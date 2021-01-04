@@ -18,13 +18,13 @@ namespace ce_toy_cs
 
     record RuleContext
     {
-        public RuleExprContext RuleExprContext { get; init; }
+        public MRuleExprContext RuleExprContext { get; init; }
         public ImmutableList<RuleLogEntry> Log { get; init; }
     }
 
     class AtomicRule : IRule
     {
-        public AtomicRule(string name, RuleExprAst<int> expr)
+        public AtomicRule(string name, RuleExprAst<int, MRuleExprContext> expr)
         {
             Name = name;
             Expr = expr.Compile();
@@ -32,7 +32,7 @@ namespace ce_toy_cs
         }
 
         public string Name { get; }
-        public RuleExpr<int> Expr { get; }
+        public RuleExpr<int, MRuleExprContext> Expr { get; }
         public IImmutableList<string> Keys { get; }
 
         public (int, RuleContext) Eval(RuleContext context)

@@ -15,7 +15,7 @@ namespace ce_toy_cs
             var result = process.Eval(new RuleContext
             {
                 Log = ImmutableList<RuleLogEntry>.Empty,
-                RuleExprContext = new RuleExprContext
+                RuleExprContext = new MRuleExprContext
                 {
                     Amount = 70,
                     Applicants = new Dictionary<string, Applicant>()

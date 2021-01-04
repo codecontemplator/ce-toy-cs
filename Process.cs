@@ -7,10 +7,10 @@ namespace ce_toy_cs
 {
     class Process
     {
-        private static RuleExprAst<int> AbsoluteMaxAmount(int amountLimit)
+        private static RuleExprAst<int,MRuleExprContext> AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in Dsl.GetAmount()
+                from amount in Dsl.GetAmount<MRuleExprContext>()
                 select Math.Min(amount, amountLimit);
         }
 
@@ -24,10 +24,10 @@ namespace ce_toy_cs
         //        select totalCredit > debtLimit ? 0 : amount;
         //}
 
-        private static RuleExprAst<int> MinTotalSalary(int salaryLimit)
+        private static RuleExprAst<int,MRuleExprContext> MinTotalSalary(int salaryLimit)
         {
             return
-                from amount in Dsl.GetAmount()
+                from amount in Dsl.GetAmount<MRuleExprContext>()
                 from salaries in Dsl.GetValues<int>("Salary")
                 select salaries.Sum() < salaryLimit ? 0 : amount;
         }
