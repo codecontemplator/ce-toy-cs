@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Linq;
 using static ce_toy_cs.RuleExprTrans;
+using Decision = ce_toy_cs.RuleExprAst<int, ce_toy_cs.MRuleExprContext>;
 
 namespace ce_toy_cs
 {
     class Process
     {
-        private static RuleExprAst<int,MRuleExprContext> AbsoluteMaxAmount(int amountLimit)
+        private static Decision AbsoluteMaxAmount(int amountLimit)
         {
             return
                 from amount in MDsl.GetAmount()
                 select Math.Min(amount, amountLimit);
         }
 
-        private static RuleExprAst<int, MRuleExprContext> MaxTotalDebt(double debtLimit)
+        private static Decision MaxTotalDebt(double debtLimit)
         {
             return
                Lift(
@@ -25,7 +26,7 @@ namespace ce_toy_cs
                );
         }
 
-        private static RuleExprAst<int,MRuleExprContext> MinTotalSalary(int salaryLimit)
+        private static Decision MinTotalSalary(int salaryLimit)
         {
             return
                 from amount in MDsl.GetAmount()
