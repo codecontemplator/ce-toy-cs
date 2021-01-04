@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
@@ -10,7 +8,7 @@ namespace ce_toy_cs
         private static RuleExprAst<int,MRuleExprContext> AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in Dsl.GetAmount<MRuleExprContext>()
+                from amount in Dsl.GetAmount()
                 select Math.Min(amount, amountLimit);
         }
 
@@ -27,7 +25,7 @@ namespace ce_toy_cs
         private static RuleExprAst<int,MRuleExprContext> MinTotalSalary(int salaryLimit)
         {
             return
-                from amount in Dsl.GetAmount<MRuleExprContext>()
+                from amount in Dsl.GetAmount()
                 from salaries in Dsl.GetValues<int>("Salary")
                 select salaries.Sum() < salaryLimit ? 0 : amount;
         }

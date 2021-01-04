@@ -9,6 +9,8 @@ namespace ce_toy_cs
 {
     static class Dsl
     {
+        public static RuleExprAst<int, MRuleExprContext> GetAmount() => GetAmount<MRuleExprContext>();
+
         public static RuleExprAst<int, RuleExprContext> GetAmount<RuleExprContext>() where RuleExprContext : IRuleExprContext
         {
             return
