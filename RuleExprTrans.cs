@@ -22,20 +22,21 @@ namespace ce_toy_cs
         public static RuleExprAst<int, MRuleExprContext> Lift(RuleExprAst<int, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, int)>, int> vote)
         {
             var sRule = sRuleExprAst.Compile();
+            var sKeys = sRuleExprAst.GetKeys();
             return
-                from evalResult in MEval(sRule)
+                from evalResult in MEval(sRule, sKeys)
                 select vote(evalResult);  // TODO: set amount as well?
         }
 
-        private static RuleExprAst<IEnumerable<(Applicant,int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule)
+        private static RuleExprAst<IEnumerable<(Applicant,int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
             return
                 from applicants in MDsl.GetApplicants()
-                from amountApplicantPairs in (from applicant in applicants.Values select SEval(applicant, sRule))
+                from amountApplicantPairs in (from applicant in applicants.Values select SEval(applicant, sRule, sKeys))
                 select amountApplicantPairs;
         }
 
-        private static RuleExprAst<(Applicant, int), MRuleExprContext> SEval(Applicant applicant, RuleExpr<int, SRuleExprContext> sRule)
+        private static RuleExprAst<(Applicant, int), MRuleExprContext> SEval(Applicant applicant, RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
             return new RuleExprAst<(Applicant, int), MRuleExprContext> {
                 Expression = mcontext => SEvalImpl(applicant, sRule)(mcontext)
