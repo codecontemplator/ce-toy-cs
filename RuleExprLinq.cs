@@ -91,7 +91,7 @@ namespace ce_toy_cs
             //{
             //    var (a, context1) = expr(context0);
             //    var fs = selector(a);                    
-            //    var (bs, contextn) = sequence fs      // sequence :: IEnumerable<RuleExprAst<U>> -> RuleExprAst<IEnumerable<U>>
+            //    var (bs, contextn) = (sequence fs)(context1)      // sequence :: IEnumerable<RuleExprAst<U>> -> RuleExprAst<IEnumerable<U>>
             //    return (projector(a, bs), contextn);
             //};
         }
