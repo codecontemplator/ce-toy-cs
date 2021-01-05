@@ -1,26 +1,37 @@
 ﻿using System;
-using System.Collections.Immutable;
-using System.Linq.Expressions;
+using System.Linq;
+using static ce_toy_cs.RuleExprTrans;
+using Decision = ce_toy_cs.RuleExprAst<int, ce_toy_cs.MRuleExprContext>;
 
 namespace ce_toy_cs
 {
     class Process
     {
-        private static RuleExprAst<int> AbsoluteMaxAmount(int amountLimit)
+        private static Decision AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in Dsl.GetAmount()
+                from amount in MDsl.GetAmount()
                 select Math.Min(amount, amountLimit);
         }
 
-        private static RuleExprAst<int> MaxTotalDebt(int debtLimit)
+        private static Decision MaxTotalDebt(double debtLimit)
         {
             return
-                from amount in Dsl.GetAmount()
-                from creditA in Dsl.GetValue("CreditA")
-                from creditB in Dsl.GetValue("CreditB")
-                let totalCredit = creditA + creditB
-                select totalCredit > debtLimit ? 0 : amount;
+               Lift(
+                    from amount in SDsl.GetAmount()
+                    from creditA in SDsl.GetValue<double>("CreditA")
+                    from creditB in SDsl.GetValue<double>("CreditB")
+                    let totalCredit = creditA + creditB
+                    select totalCredit > debtLimit ? 0 : amount
+               );
+        }
+
+        private static Decision MinTotalSalary(int salaryLimit)
+        {
+            return
+                from amount in MDsl.GetAmount()
+                from salaries in MDsl.GetValues<int>("Salary")
+                select salaries.Sum() < salaryLimit ? 0 : amount;
         }
 
         public static IRule GetProcess()
@@ -29,6 +40,7 @@ namespace ce_toy_cs
                 new RuleBuilder()
                     .Add(new AtomicRule("AbsoluteMaxAmount", AbsoluteMaxAmount(100)))
                     .Add(new AtomicRule("MaxTotalDebt", MaxTotalDebt(50)))
+                    .Add(new AtomicRule("MinTotalSalary", MinTotalSalary(50)))
                     .Build();
         }
     }

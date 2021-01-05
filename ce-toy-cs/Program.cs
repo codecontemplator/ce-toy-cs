@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace ce_toy_cs
@@ -10,18 +11,44 @@ namespace ce_toy_cs
             var process = Process.GetProcess();
 
             Console.WriteLine($"Process uses keys: {string.Join(',', process.GetKeys())}");
-            var builder = ImmutableDictionary.CreateBuilder<string, int>();
-            builder.Add("CreditA", 100);
-            builder.Add("CreditB", 2);
 
             var result = process.Eval(new RuleContext
             {
                 Log = ImmutableList<RuleLogEntry>.Empty,
-                RuleExprContext = new RuleExprContext
+                RuleExprContext = new MRuleExprContext
                 {
                     Amount = 70,
-                    Loaders = ImmutableList<ILoader>.Empty,
-                    KeyValueMap = builder.ToImmutable()
+                    Applicants = new Dictionary<string, Applicant>()
+                    {
+                        {
+                            "applicant1",
+                            new Applicant
+                            {
+                                Id = "applicant1",
+                                KeyValueMap = new Dictionary<string, object>
+                                {
+                                    { "CreditA", 20.0 },
+                                    { "CreditB", 29.0 },
+                                    { "Salary", 10 },
+                                }.ToImmutableDictionary(),
+                                Loaders = ImmutableList<ILoader>.Empty
+                            }
+                        },
+                        {
+                            "applicant2",
+                            new Applicant
+                            {
+                                Id = "applicant2",
+                                KeyValueMap = new Dictionary<string, object>
+                                {
+                                    { "CreditA", 10.0 },
+                                    { "CreditB", 39.0 },
+                                    { "Salary", 41 },
+                                }.ToImmutableDictionary(),
+                                Loaders = ImmutableList<ILoader>.Empty
+                            }
+                        }
+                    }.ToImmutableDictionary(),
                 }
             });
 
@@ -30,3 +57,4 @@ namespace ce_toy_cs
         }
     }
 }
+    
