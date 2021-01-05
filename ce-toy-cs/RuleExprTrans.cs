@@ -25,7 +25,7 @@ namespace ce_toy_cs
             var sKeys = sRuleExprAst.GetKeys();
             return
                 from evalResult in MEval(sRule, sKeys)
-                select vote(evalResult);  // TODO: set amount as well?
+                select vote(evalResult);
         }
 
         private static RuleExprAst<IEnumerable<(Applicant,int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
