@@ -34,17 +34,17 @@ namespace ce_toy_cs
                 select salaries.Sum() < salaryLimit ? 0 : amount;
         }
 
-        //private static Decision MainApplicantMustHaveAddress()
-        //{
-        //    return
-        //        Lift(
-        //            from amount in SDsl.GetAmount()
-        //            from role in SDsl.GetValue<string>("Role")
-        //            where role == "Primary"
-        //            from address in SDsl.GetValue<string>("Address")
-        //            select string.IsNullOrEmpty(address) ? 0 : amount
-        //       );
-        //}
+        private static Decision MainApplicantMustHaveAddress()
+        {
+            return
+                Lift(
+                    from amount in SDsl.GetAmount()
+                    from role in SDsl.GetValue<string>("Role")
+                    where role == "Primary"
+                    from address in SDsl.GetValue<string>("Address")
+                    select string.IsNullOrEmpty(address) ? 0 : amount
+               );
+        }
 
         public static IRule GetProcess()
         {

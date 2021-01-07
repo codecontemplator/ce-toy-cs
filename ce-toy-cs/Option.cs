@@ -6,8 +6,8 @@
         public static Option<T> None => default;
         public static Option<T> Some(T value) => new Option<T>(value);
 
-        readonly bool isSome;
-        readonly T value;
+        public readonly bool isSome;
+        public readonly T value;
 
         Option(T value)
         {

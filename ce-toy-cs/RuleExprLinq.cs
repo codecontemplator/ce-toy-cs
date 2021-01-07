@@ -28,18 +28,54 @@ namespace ce_toy_cs
             return (Expression.Field(tuple, "Item1"), Expression.Field(tuple, "Item2"));
         }
 
+        private static Expression MkResult<T, RuleExprContext>(Expression newValueOptionAndContext, LambdaExpression transform)
+        {
+            var (newValueOption, newContext) = DeconstructTuple(newValueOptionAndContext);
+
+            return
+                Expression.IfThenElse(
+                    Expression.Equal(
+                        Expression.Field(newValueOption, "isSome"),
+                        Expression.Constant(true)),
+                    MkTuple<T, RuleExprContext>(
+                        Expression.Invoke(
+                            transform,
+                            Expression.Field(newValueOption, "value")),
+                        newContext),
+                    MkTuple<T, RuleExprContext>(
+                        GetNoneValue<T>(),
+                        newContext));
+        }
+
+        private static LambdaExpression WrapSome<T>()
+        {
+            Expression<Func<T, Option<T>>> toSome = value => Option<T>.Some(value);
+            return toSome;
+        }
+
+        private static Expression GetNoneValue<T>()
+        {
+            return Expression.Call(typeof(Option<T>).GetProperty("None").GetGetMethod());
+        }
+
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var (value, newContext) = DeconstructTuple(Expression.Invoke(expr.Expression, context));
-            var convertedValue = Expression.Invoke(convert, value);
-            var returnValueTuple = MkTuple<U, RuleExprContext>(convertedValue, newContext);
+            var newValueOptionAndContext = Expression.Invoke(expr.Expression, context);
+
+            var value = Expression.Parameter(typeof(T), "value");
+            var convertedValue = Expression.Invoke(WrapSome<U>(), Expression.Invoke(convert, value));
+            var convertValue = Expression.Lambda(convertedValue, value);
+
+            var returnValueTuple = MkResult<U, RuleExprContext>(newValueOptionAndContext, convertValue);
             var resultFunc = Expression.Lambda<RuleExpr<U, RuleExprContext>>(returnValueTuple, context);
+            
             return new RuleExprAst<U, RuleExprContext> { Expression = resultFunc };
+
             //return context =>
             //{
-            //    var (a, context2) = expr(context);
-            //    return (convert(a), context2);
+            //    var (a, context2) = expr(context);    | var newValueOptionAndContext = expr(context)
+            //    return (convert(a), context2);        | return mkResult(newValueOptionAndContext, \value -> Some(convert(a))
             //};
         }
 
@@ -57,32 +93,37 @@ namespace ce_toy_cs
 
             //return context =>
             //{
-            //    var (a, context2) = expr(context);
+            //    var (a, context2) = expr(context);         
             //    var (b, context3) = selector(a)(context2);
             //    return (projector(a, b), context3);
             //};
         }
 
-        //public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, bool>> filter)
-        //{
-        //    var context = Expression.Parameter(typeof(RuleExprContext), "context");
-        //    var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
+        public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, bool>> filter)
+        {
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            var newValueOptionAndContext = Expression.Invoke(expr.Expression, context);
 
-        //    var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
-        //    //var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
+            var value = Expression.Parameter(typeof(T), "value");
+            var convertedValue =
+                Expression.IfThenElse(
+                    Expression.Equal(
+                        Expression.Invoke(filter, value),
+                        Expression.Constant(true)),
+                    Expression.Invoke(WrapSome<T>(), value),
+                    GetNoneValue<T>());
+            var convertValue = Expression.Lambda(convertedValue, value);
 
-        //    var predicateResult = Expression.AndAlso(Expression.NotEqual(Expression.Constant(null, typeof(object)), intermediateValueAndContext), Expression.Invoke(filter, intermediateValue));
+            var returnValueTuple = MkResult<T, RuleExprContext>(newValueOptionAndContext, convertValue);
+            var resultFunc = Expression.Lambda<RuleExpr<T, RuleExprContext>>(returnValueTuple, context);
+            return new RuleExprAst<T, RuleExprContext> { Expression = resultFunc };
 
-        //    var resultTupleOrNull = Expression.IfThenElse(predicateResult, intermediateValueAndContext, Expression.Constant(null, typeof(object)));
-        //    var resultFunc = Expression.Lambda<RuleExpr<T, RuleExprContext>>(resultTupleOrNull, context);
-        //    return new RuleExprAst<T, RuleExprContext> { Expression = resultFunc };
-
-        //    //  return context => 
-        //    //  {
-        //    //      var t = expr(context0);
-        //    //      return t == null ? null : filter(t.Value) ? (t.Value, t.Context) : null;
-        //    //  }
-        //}
+            //  return context => 
+            //  {
+            //      var newValueOptionAndContext = expr(context);
+            //      return mkResult(newValueOptionAndContext, \value -> filter(value) ? Some(value) : Option.None);
+            //  }
+        }
 
         public static RuleExprAst<IEnumerable<V>, RuleExprContext> SelectMany<T, U, V, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, IEnumerable<RuleExprAst<U, RuleExprContext>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
         {
