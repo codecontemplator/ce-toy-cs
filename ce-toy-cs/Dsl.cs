@@ -12,7 +12,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<int, SRuleExprContext>
                 {
-                    Expression = (context => new Tuple<int, SRuleExprContext>(context.Amount, context).ToValueTuple())
+                    Expression = (context => new Tuple<Option<int>, SRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple())
                 };
         }
 
@@ -36,7 +36,7 @@ namespace ce_toy_cs
                     if (!(value is T))
                         throw new Exception($"Failed to retrieve value for key {key} for applicant {applicant.Id} due to type mismatch. Got {value.GetType().Name}, expected {typeof(T).Name}");
 
-                    return ((T)value, context);
+                    return (Option<T>.Some((T)value), context);
                 }
 
                 if (!applicant.Loaders.Any())
@@ -63,7 +63,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<int, MRuleExprContext>
                 {
-                    Expression = (context => new Tuple<int, MRuleExprContext>(context.Amount, context).ToValueTuple())
+                    Expression = (context => new Tuple<Option<int>, MRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple())
                 };
         }
 
@@ -94,7 +94,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext>
                 {
-                    Expression = (context => new Tuple<ImmutableDictionary<string, Applicant>, MRuleExprContext>(context.Applicants, context).ToValueTuple())
+                    Expression = (context => new Tuple<Option<ImmutableDictionary<string, Applicant>>, MRuleExprContext>(Option<ImmutableDictionary<string, Applicant>>.Some(context.Applicants), context).ToValueTuple())
                 };
         }
 
@@ -111,7 +111,7 @@ namespace ce_toy_cs
                     if (!(value is T))
                         throw new Exception($"Failed to retrieve value for key {key} for applicant {applicantId} due to type mismatch. Got {value.GetType().Name}, expected {typeof(T).Name}");
 
-                    return ((T)value, context);
+                    return (Option<T>.Some((T)value), context);
                 }
 
                 if (!applicant.Loaders.Any())

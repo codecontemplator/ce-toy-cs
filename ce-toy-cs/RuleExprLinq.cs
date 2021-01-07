@@ -10,7 +10,7 @@ namespace ce_toy_cs
     {
         public static RuleExprAst<T, RuleExprContext> Wrap<T, RuleExprContext>(T value)
         {
-            return new RuleExprAst<T, RuleExprContext> { Expression = context => new Tuple<T, RuleExprContext>(value, context).ToValueTuple() };
+            return new RuleExprAst<T, RuleExprContext> { Expression = context => new Tuple<Option<T>, RuleExprContext>(Option<T>.Some(value), context).ToValueTuple() };
         }
 
         private static Expression MkTuple<T1, T2>(Expression t1, Expression t2)

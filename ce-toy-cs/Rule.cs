@@ -37,7 +37,10 @@ namespace ce_toy_cs
 
         public (int, RuleContext) Eval(RuleContext context)
         {
-            var (amount,ruleExprContext) = Expr(context.RuleExprContext);
+            var (amountOption,ruleExprContext) = Expr(context.RuleExprContext);
+            int amount;
+            if (!amountOption.IsSome(out amount)) 
+                amount = ruleExprContext.Amount;
             return
                 (
                     amount,
