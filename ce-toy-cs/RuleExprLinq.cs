@@ -82,21 +82,39 @@ namespace ce_toy_cs
         public static RuleExprAst<V, RuleExprContext> SelectMany<T, U, V, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, RuleExprAst<U, RuleExprContext>>> selector, Expression<Func<T, U, V>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var (intermediateValue, intermediateContext) = DeconstructTuple(Expression.Invoke(expr.Expression, context));
-            var selectorResult = Expression.Property(Expression.Invoke(selector, intermediateValue), "Expression");
-            var (finalValue, finalContext) = DeconstructTuple(Expression.Invoke(selectorResult, intermediateContext));
-            var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
+            var valueOptionAndContextA = Expression.Invoke(expr.Expression, context);
+            var (_, contextA) = DeconstructTuple(valueOptionAndContextA);
 
-            var returnValueTuple = MkTuple<V, RuleExprContext>(projectedValue, finalContext);
+            var valueAParam = Expression.Parameter(typeof(T), "valueA");
+            var valueBParam = Expression.Parameter(typeof(U), "valueB");
+            var projectBDef = Expression.Lambda(Expression.Invoke(projector, valueAParam, valueBParam));
+            var projectB = Expression.Lambda(projectBDef, valueBParam);            
+            var projectADef = 
+                MkResult<U, RuleExprContext>(
+                    Expression.Invoke(
+                        Expression.Invoke(selector, valueAParam), 
+                        contextA), 
+                    projectB);
+            var projectA = Expression.Lambda(projectADef, valueAParam);
+            var returnValueTuple = MkResult<V, RuleExprContext>(valueOptionAndContextA, projectA);
+
             var resultFunc = Expression.Lambda<RuleExpr<V, RuleExprContext>>(returnValueTuple, context);
             return new RuleExprAst<V, RuleExprContext> { Expression = resultFunc };
 
             //return context =>
             //{
-            //    var (a, context2) = expr(context);         
-            //    var (b, context3) = selector(a)(context2);
-            //    return (projector(a, b), context3);
+            //    var (a, context2) = expr(context);            | 
+            //    var (b, context3) = selector(a)(context2);    | return mkResult(valueOptionAndContext, \a -> { var valueOptionAndContext2 = selector(a)
+            //    return (projector(a, b), context3);           |    };
             //};
+
+            // return context => 
+            // {
+            //    var valueOptionAndContextA = expr(context);
+            //    return mkResult(valueOptionAndContextA, a => { 
+            //       return mkResult(selector(a)(valueOptionAndContextA.Context), b => projector(a,b));
+            //    }
+            // }
         }
 
         public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, bool>> filter)
