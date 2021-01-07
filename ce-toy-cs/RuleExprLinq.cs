@@ -15,7 +15,7 @@ namespace ce_toy_cs
 
         private static Expression MkTuple<T1, T2>(Expression t1, Expression t2)
         {
-            var tupleConstructor = typeof(Tuple<T1, T2>).GetConstructor(new[] { typeof(T1), typeof(T2) });
+            var tupleConstructor = typeof(Tuple<T1, T2>).GetConstructor(new[] { typeof(T1), typeof(T2) }) ?? throw new Exception("Constructor not found");
             var returnTuple = Expression.New(tupleConstructor, new Expression[] { t1, t2 });
             var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
             var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(T1), typeof(T2));
@@ -23,12 +23,15 @@ namespace ce_toy_cs
             return returnValueTuple;
         }
 
+        private static (MemberExpression, MemberExpression) DeconstructTuple(Expression tuple)
+        {
+            return (Expression.Field(tuple, "Item1"), Expression.Field(tuple, "Item2"));
+        }
+
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var valueAndNewContext = Expression.Invoke(expr.Expression, context);
-            var value = Expression.Field(valueAndNewContext, "Item1");
-            var newContext = Expression.Field(valueAndNewContext, "Item2");
+            var (value, newContext) = DeconstructTuple(Expression.Invoke(expr.Expression, context));
             var convertedValue = Expression.Invoke(convert, value);
             var returnValueTuple = MkTuple<U, RuleExprContext>(convertedValue, newContext);
             var resultFunc = Expression.Lambda<RuleExpr<U, RuleExprContext>>(returnValueTuple, context);
@@ -43,14 +46,9 @@ namespace ce_toy_cs
         public static RuleExprAst<V, RuleExprContext> SelectMany<T, U, V, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, RuleExprAst<U, RuleExprContext>>> selector, Expression<Func<T, U, V>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
-            var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
-            var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
-            var selectorResult = Expression.Invoke(selector, intermediateValue);
-            var selectorResultExpression = Expression.Property(selectorResult, "Expression");
-            var finalValueAndContext = Expression.Invoke(selectorResultExpression, intermediateContext);
-            var finalValue = Expression.Field(finalValueAndContext, "Item1");
-            var finalContext = Expression.Field(finalValueAndContext, "Item2");
+            var (intermediateValue, intermediateContext) = DeconstructTuple(Expression.Invoke(expr.Expression, context));
+            var selectorResult = Expression.Property(Expression.Invoke(selector, intermediateValue), "Expression");
+            var (finalValue, finalContext) = DeconstructTuple(Expression.Invoke(selectorResult, intermediateContext));
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
             var returnValueTuple = MkTuple<V, RuleExprContext>(projectedValue, finalContext);
@@ -65,22 +63,37 @@ namespace ce_toy_cs
             //};
         }
 
+        //public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, bool>> filter)
+        //{
+        //    var context = Expression.Parameter(typeof(RuleExprContext), "context");
+        //    var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
+
+        //    var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
+        //    //var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
+
+        //    var predicateResult = Expression.AndAlso(Expression.NotEqual(Expression.Constant(null, typeof(object)), intermediateValueAndContext), Expression.Invoke(filter, intermediateValue));
+
+        //    var resultTupleOrNull = Expression.IfThenElse(predicateResult, intermediateValueAndContext, Expression.Constant(null, typeof(object)));
+        //    var resultFunc = Expression.Lambda<RuleExpr<T, RuleExprContext>>(resultTupleOrNull, context);
+        //    return new RuleExprAst<T, RuleExprContext> { Expression = resultFunc };
+
+        //    //  return context => 
+        //    //  {
+        //    //      var t = expr(context0);
+        //    //      return t == null ? null : filter(t.Value) ? (t.Value, t.Context) : null;
+        //    //  }
+        //}
+
         public static RuleExprAst<IEnumerable<V>, RuleExprContext> SelectMany<T, U, V, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, IEnumerable<RuleExprAst<U, RuleExprContext>>>> selector, Expression<Func<T, IEnumerable<U>, IEnumerable<V>>> projector)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
-            var intermediateValueAndContext = Expression.Invoke(expr.Expression, context);
-            var intermediateValue = Expression.Field(intermediateValueAndContext, "Item1");
-            var intermediateContext = Expression.Field(intermediateValueAndContext, "Item2");
+            var (intermediateValue, intermediateContext) = DeconstructTuple(Expression.Invoke(expr.Expression, context));
             var selectorResult = Expression.Invoke(selector, intermediateValue);
 
-            var sequencer = MkSequencer<U, RuleExprContext>();
-            var sequencedResult = Expression.Invoke(sequencer, selectorResult);
+            var sequencedResult = Expression.Invoke(MkSequencer<U, RuleExprContext>(), selectorResult);
             var sequencedResultExpression = Expression.Property(sequencedResult, "Expression");
 
-            var finalValueAndContext = Expression.Invoke(sequencedResultExpression, intermediateContext);
-
-            var finalValue = Expression.Field(finalValueAndContext, "Item1");
-            var finalContext = Expression.Field(finalValueAndContext, "Item2");
+            var (finalValue, finalContext) = DeconstructTuple(Expression.Invoke(sequencedResultExpression, intermediateContext));
             var projectedValue = Expression.Invoke(projector, intermediateValue, finalValue);
 
             var returnValueTuple = MkTuple<IEnumerable<V>, RuleExprContext>(projectedValue, finalContext);
