@@ -47,10 +47,10 @@ namespace ce_toy_cs
                         newContext));
         }
 
-        private static LambdaExpression WrapSome<T>()
+        private static Expression WrapSome<T>(Expression value)
         {
             Expression<Func<T, Option<T>>> toSome = value => Option<T>.Some(value);
-            return toSome;
+            return Expression.Invoke(toSome, value);
         }
 
         private static Expression GetNoneValue<T>()
@@ -64,7 +64,7 @@ namespace ce_toy_cs
             var newValueOptionAndContext = Expression.Invoke(expr.Expression, context);
 
             var value = Expression.Parameter(typeof(T), "value");
-            var convertedValue = Expression.Invoke(WrapSome<U>(), Expression.Invoke(convert, value));
+            var convertedValue = WrapSome<U>(Expression.Invoke(convert, value));
             var convertValue = Expression.Lambda(convertedValue, value);
 
             var returnValueTuple = MkResult<U, RuleExprContext>(newValueOptionAndContext, convertValue);
@@ -110,7 +110,7 @@ namespace ce_toy_cs
                     Expression.Equal(
                         Expression.Invoke(filter, value),
                         Expression.Constant(true)),
-                    Expression.Invoke(WrapSome<T>(), value),
+                    WrapSome<T>(value),
                     GetNoneValue<T>());
             var convertValue = Expression.Lambda(convertedValue, value);
 
