@@ -23,22 +23,6 @@ namespace ce_toy_cs
             return returnValueTuple;
         }
 
-        private static (MemberExpression, MemberExpression) DeconstructTuple(Expression tuple)
-        {
-            return (Expression.Field(tuple, "Item1"), Expression.Field(tuple, "Item2"));
-        }
-
-        //private static Expression MkResult<T, RuleExprContext>(Expression newValueOptionAndContext, LambdaExpression transform)
-        //{
-        //    var (newValueOption, newContext) = DeconstructTuple(newValueOptionAndContext);
-
-        //    return
-        //        Expression.Condition(
-        //            Expression.Equal(Expression.Field(newValueOption, "isSome"), Expression.Constant(true)),
-        //            MkTuple<T, RuleExprContext>(Expression.Invoke(transform, Expression.Field(newValueOption, "value")), newContext),
-        //            MkTuple<T, RuleExprContext>(GetNoneValue<T>(), newContext));
-        //}
-
         private static Expression WrapSome<T>(Expression value)
         {
             Expression<Func<T, Option<T>>> toSome = value => Option<T>.Some(value);
