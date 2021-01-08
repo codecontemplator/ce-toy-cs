@@ -7,6 +7,8 @@ namespace ce_toy_cs
 {
     class Process
     {
+        private const int reject = 0;
+
         private static Decision AbsoluteMaxAmount(int amountLimit)
         {
             return
@@ -22,7 +24,8 @@ namespace ce_toy_cs
                     from creditA in SDsl.GetValue<double>("CreditA")
                     from creditB in SDsl.GetValue<double>("CreditB")
                     let totalCredit = creditA + creditB
-                    select totalCredit > debtLimit ? 0 : amount
+                    where totalCredit > debtLimit
+                    select reject
                );
         }
 
@@ -31,7 +34,8 @@ namespace ce_toy_cs
             return
                 from amount in MDsl.GetAmount()
                 from salaries in MDsl.GetValues<int>("Salary")
-                select salaries.Sum() < salaryLimit ? 0 : amount;
+                where salaries.Sum() < salaryLimit
+                select reject;
         }
 
         private static Decision MainApplicantMustHaveAddress()
@@ -53,7 +57,7 @@ namespace ce_toy_cs
                     .Add(new AtomicRule("AbsoluteMaxAmount", AbsoluteMaxAmount(100)))
                     .Add(new AtomicRule("MaxTotalDebt", MaxTotalDebt(50)))
                     .Add(new AtomicRule("MinTotalSalary", MinTotalSalary(50)))
-                    //                    .Add(new AtomicRule("MainApplicantMustHaveAddress", MainApplicantMustHaveAddress()))
+                    .Add(new AtomicRule("MainApplicantMustHaveAddress", MainApplicantMustHaveAddress()))
                     .Build();
         }
     }

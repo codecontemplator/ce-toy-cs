@@ -17,7 +17,7 @@ namespace ce_toy_cs
                 Log = ImmutableList<RuleLogEntry>.Empty,
                 RuleExprContext = new MRuleExprContext
                 {
-                    Amount = 70,
+                    Amount = 170,
                     Applicants = new Dictionary<string, Applicant>()
                     {
                         {
@@ -30,6 +30,8 @@ namespace ce_toy_cs
                                     { "CreditA", 20.0 },
                                     { "CreditB", 29.0 },
                                     { "Salary", 10 },
+                                    { "Role", "Primary" },
+                                    { "Address", "Street 1" }
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty
                             }
@@ -44,6 +46,8 @@ namespace ce_toy_cs
                                     { "CreditA", 10.0 },
                                     { "CreditB", 39.0 },
                                     { "Salary", 41 },
+                                    { "Role", "Secondary" },
+                                    { "Address", "" }
                                 }.ToImmutableDictionary(),
                                 Loaders = ImmutableList<ILoader>.Empty
                             }
