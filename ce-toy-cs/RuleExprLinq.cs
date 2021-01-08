@@ -15,12 +15,8 @@ namespace ce_toy_cs
 
         private static Expression MkTuple<T1, T2>(Expression t1, Expression t2)
         {
-            var tupleConstructor = typeof(Tuple<T1, T2>).GetConstructor(new[] { typeof(T1), typeof(T2) }) ?? throw new Exception("Constructor not found");
-            var returnTuple = Expression.New(tupleConstructor, new Expression[] { t1, t2 });
-            var toValueTupleInfo = typeof(TupleExtensions).GetMethodExt("ToValueTuple", new[] { typeof(Tuple<,>) });
-            var toValueTuple = toValueTupleInfo.MakeGenericMethod(typeof(T1), typeof(T2));
-            var returnValueTuple = Expression.Call(null, toValueTuple, returnTuple);
-            return returnValueTuple;
+            Expression<Func<T1, T2, (T1, T2)>> toTuple = (x, y) => new Tuple<T1,T2>(x, y).ToValueTuple();
+            return Expression.Invoke(toTuple, t1, t2);
         }
 
         private static Expression WrapSome<T>(Expression value)
@@ -31,7 +27,8 @@ namespace ce_toy_cs
 
         private static Expression GetNoneValue<T>()
         {
-            return Expression.Call(typeof(Option<T>).GetProperty("None").GetGetMethod());
+            Expression<Func<Option<T>>> getNoneValue = () => Option<T>.None;
+            return Expression.Invoke(getNoneValue);
         }
 
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
