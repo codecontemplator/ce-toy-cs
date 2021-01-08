@@ -52,10 +52,10 @@ namespace ce_toy_cs
         {
             return
                 new RuleBuilder()
-                    .Add(new AtomicRule("AbsoluteMaxAmount", AbsoluteMaxAmount(100)))
-                    .Add(new AtomicRule("MaxTotalDebt", MaxTotalDebt(50)))
-                    .Add(new AtomicRule("MinTotalSalary", MinTotalSalary(50)))
-                    .Add(new AtomicRule("MainApplicantMustHaveAddress", MainApplicantMustHaveAddress()))
+                    .Add(() => AbsoluteMaxAmount(100))
+                    .Add(() => MaxTotalDebt(50))
+                    .Add(() => MinTotalSalary(50))
+                    .Add(() => MainApplicantMustHaveAddress())
                     .Build();
         }
     }

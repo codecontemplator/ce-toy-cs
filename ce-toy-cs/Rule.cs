@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
@@ -24,6 +26,14 @@ namespace ce_toy_cs
 
     class AtomicRule : IRule
     {
+        public AtomicRule(Expression<Func<RuleExprAst<int, MRuleExprContext>>> expression)
+        {
+            Name = ((MethodCallExpression)expression.Body).Method.Name;
+            var expr = expression.Compile()();
+            Expr = expr.Compile();
+            Keys = ImmutableList.ToImmutableList(expr.GetKeys());
+        }
+
         public AtomicRule(string name, RuleExprAst<int, MRuleExprContext> expr)
         {
             Name = name;
@@ -98,6 +108,11 @@ namespace ce_toy_cs
                 _current = new AndThenRule(_current, rule);
 
             return this;
+        }
+
+        public RuleBuilder Add(Expression<Func<RuleExprAst<int, MRuleExprContext>>> expression)
+        {
+            return Add(new AtomicRule(expression));
         }
 
         public IRule Build() => _current;
