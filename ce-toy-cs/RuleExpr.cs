@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
-    public delegate (T, RuleExprContext) RuleExpr<T, RuleExprContext>(RuleExprContext input);
+    public delegate (Option<T>, RuleExprContext) RuleExpr<T, RuleExprContext>(RuleExprContext input);
 
     public record Applicant
     {

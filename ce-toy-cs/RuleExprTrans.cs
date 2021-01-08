@@ -47,7 +47,7 @@ namespace ce_toy_cs
         {
             return mcontext =>
             {
-                var (newAmount, newSContext) = sRule(new SRuleExprContext
+                var (newAmountOption, newSContext) = sRule(new SRuleExprContext
                 {
                     Amount = mcontext.Amount,
                     Applicant = applicant
@@ -58,7 +58,14 @@ namespace ce_toy_cs
                     Applicants = mcontext.Applicants.SetItem(applicant.Id, newSContext.Applicant)
                 };
 
-                return ((applicant, newAmount), newMContext);
+                if (newAmountOption.IsSome(out var newAmount))
+                {
+                    return (Option<(Applicant, int)>.Some((applicant, newAmount)), newMContext);  // Rule applied to applicant and gave a result
+                }
+                else
+                {
+                    return (Option<(Applicant, int)>.Some((applicant, mcontext.Amount)), newMContext);  // Rule did not apply to applicant => amount is not affected => granted amount = requested amount
+                }
             };
         }
     }
