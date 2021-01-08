@@ -60,11 +60,11 @@ namespace ce_toy_cs
 
                 if (newAmountOption.IsSome(out var newAmount))
                 {
-                    return (Option<(Applicant, int)>.Some((applicant, newAmount)), newMContext);
+                    return (Option<(Applicant, int)>.Some((applicant, newAmount)), newMContext);  // Rule applied to applicant and gave a result
                 }
                 else
                 {
-                    return (Option<(Applicant, int)>.None, newMContext);
+                    return (Option<(Applicant, int)>.Some((applicant, mcontext.Amount)), newMContext);  // Rule did not apply to applicant => amount is not affected => granted amount = requested amount
                 }
             };
         }
