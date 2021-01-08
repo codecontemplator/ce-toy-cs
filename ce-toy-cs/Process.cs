@@ -20,7 +20,6 @@ namespace ce_toy_cs
         {
             return
                Lift(
-                    from amount in SDsl.GetAmount()
                     from creditA in SDsl.GetValue<double>("CreditA")
                     from creditB in SDsl.GetValue<double>("CreditB")
                     let totalCredit = creditA + creditB
@@ -32,7 +31,6 @@ namespace ce_toy_cs
         private static Decision MinTotalSalary(int salaryLimit)
         {
             return
-                from amount in MDsl.GetAmount()
                 from salaries in MDsl.GetValues<int>("Salary")
                 where salaries.Sum() < salaryLimit
                 select reject;
@@ -42,11 +40,11 @@ namespace ce_toy_cs
         {
             return
                 Lift(
-                    from amount in SDsl.GetAmount()
                     from role in SDsl.GetValue<string>("Role")
                     where role == "Primary"
                     from address in SDsl.GetValue<string>("Address")
-                    select string.IsNullOrEmpty(address) ? 0 : amount
+                    where string.IsNullOrEmpty(address)
+                    select reject
                );
         }
 

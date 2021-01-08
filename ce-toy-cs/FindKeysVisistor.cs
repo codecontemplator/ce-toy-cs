@@ -21,10 +21,22 @@ namespace ce_toy_cs
             }
             if (node.Method.Name == "GetValue")
             {
-                var keyArg = node.Arguments.Single() as ConstantExpression; 
-                var key = keyArg.Value as string;
-                FoundKeys.Add(key);
-                return node;
+                if (node.Arguments.Count == 1)
+                {
+                    var keyArg = node.Arguments[0] as ConstantExpression;
+                    var key = keyArg.Value as string;
+                    FoundKeys.Add(key);
+                    return node;
+                }
+                else
+                {
+                    var keysArg = node.Arguments[1] as MemberExpression;
+                    var keysArgExpression = keysArg.Expression as ConstantExpression;
+                    var sKeysFieldInfo = keysArgExpression.Value.GetType().GetField("key");
+                    var key = sKeysFieldInfo.GetValue(keysArgExpression.Value) as string;
+                    FoundKeys.Add(key);
+                    return node;
+                }
             }
             else if (node.Method.Name == "SEval")
             {
