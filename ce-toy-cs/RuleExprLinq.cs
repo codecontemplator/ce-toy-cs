@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ce_toy_cs.Details;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -193,7 +194,7 @@ namespace ce_toy_cs
                         Expression.Block(
                             Expression.Assign(valueOptionAndContextBVar,
                                 Expression.Invoke(
-                                    Expression.Property(Sequence<U, RuleExprContext>(Expression.Invoke(selector, Expression.Field(valueOptionAVar, "value"))), "Expression"),
+                                    Sequence<U, RuleExprContext>(Expression.Invoke(selector, Expression.Field(valueOptionAVar, "value"))),
                                     contextAVar
                                 )),
                             Expression.Assign(valueOptionBVar, Expression.Field(valueOptionAndContextBVar, "Item1")),
@@ -228,32 +229,51 @@ namespace ce_toy_cs
             //};
         }
 
-        private static Expression Sequence<T, RuleExprContext>(Expression fs)
+        // Argument type: Expression<IEnumerable<RuleExprAst<T, RuleExprContext>>>
+        // Return type: Expression<RuleExpr<ImmutableList<T>, RuleExprContext>>   -- note: RuleExpr not RuleExprAst
+        private static Expression Sequence<T, RuleExprContext>(Expression fsVar)
         {
-            return Expression.Invoke(MkSequencer<T, RuleExprContext>(), fs);
-        }
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-        private delegate RuleExprAst<ImmutableList<T>, RuleExprContext> SequencerDelegate<T, RuleExprContext>(IEnumerable<RuleExprAst<T, RuleExprContext>> input);
+            var valueOptionAndContextVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            var values = Expression.Variable(typeof(ImmutableList<T>));
+            var fVar = Expression.Parameter(typeof(RuleExprAst<T, RuleExprContext>), "f(loopVar)");
+            var breakLabel = Expression.Label("LoopBreak");
+            var loopBody = Expression.Block(
+                    Expression.Assign(valueOptionAndContextVar, Expression.Invoke(Expression.Property(fVar, "Expression"), contextVar)),
+                    Expression.Assign(valueOptionVar, Expression.Field(valueOptionAndContextVar, "Item1")),
+                    Expression.Assign(contextVar, Expression.Field(valueOptionAndContextVar, "Item2")),
+                    Expression.IfThenElse(
+                        Expression.Equal(Expression.Field(valueOptionVar, "isSome"), Expression.Constant(true)),
+                        Expression.Assign(values, Expression.Call(values, typeof(ImmutableList<>).MakeGenericType(typeof(T)).GetMethod("Add"), Expression.Field(valueOptionVar, "value"))),
+                        Expression.Break(breakLabel)
+                    )
+                );
+            var loop = ExpressionEx.ForEach(fsVar, fVar, loopBody, breakLabel);
 
-        private static Expression<SequencerDelegate<U, RuleExprContext>> MkSequencer<U, RuleExprContext>()
-        {
-            Expression<
-                Func<
-                    Func<IEnumerable<RuleExprAst<U, RuleExprContext>>,RuleExprAst<ImmutableList<U>, RuleExprContext>>,
-                    Func<IEnumerable<RuleExprAst<U, RuleExprContext>>,RuleExprAst<ImmutableList<U>, RuleExprContext>>
-                >
-            > sequenceNonRecursive = f => xs => 
-                    !xs.Any() 
-                        ?
-                            Wrap<ImmutableList<U>, RuleExprContext>(ImmutableList<U>.Empty) 
-                        :
-                            xs.First().SelectMany(t => f(xs.Skip(1)), (t, ts) => ts.Add(t));
+            var functionBody =
+                Expression.Block(
+                    new[] { valueOptionAndContextVar, valueOptionVar, contextVar, values },
+                    Expression.Assign(contextVar, context),
+                    Expression.Assign(values, Expression.Constant(ImmutableList<T>.Empty)),
+                    loop,
+                    MkTuple<Option<ImmutableList<T>>, RuleExprContext>(WrapSome<ImmutableList<T>>(values), contextVar)
+                );
 
-            var fixExpression = YCombinator<IEnumerable<RuleExprAst<U, RuleExprContext>>, RuleExprAst<ImmutableList<U>, RuleExprContext>>.Fix;
-            var sequence = Expression.Invoke(fixExpression, sequenceNonRecursive);
-             
-            var arg = Expression.Parameter(typeof(IEnumerable<RuleExprAst<U, RuleExprContext>>), "arg");
-            return Expression.Lambda<SequencerDelegate<U, RuleExprContext>>(Expression.Invoke(sequence, arg), arg);
+            return Expression.Lambda<RuleExpr<ImmutableList<T>, RuleExprContext>>(functionBody, context);
+
+            // context =>
+            //   var as = []
+            //   foreach(var f in fs) 
+            //   {
+            //      (a, context') = f(contex);
+            //      context = context';
+            //      if (!a) break;
+            //      as.add(a);
+            //   }
+            //   return (as, context)
         }
     }
 }

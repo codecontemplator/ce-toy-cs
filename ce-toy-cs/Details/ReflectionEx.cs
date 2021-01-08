@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Details
 {
     static class ReflectionEx
     {
@@ -19,8 +15,7 @@ namespace ce_toy_cs
                                                 string name,
                                                 params Type[] parameterTypes)
         {
-            return GetMethodExt(thisType,
-                                name,
+            return thisType.GetMethodExt(name,
                                 BindingFlags.Instance
                                 | BindingFlags.Static
                                 | BindingFlags.Public
@@ -120,8 +115,8 @@ namespace ce_toy_cs
 
             // If the types are identical, or they're both generic parameters 
             // or the special 'T' type, treat as a match
-            if (thisType == type || ((thisType.IsGenericParameter || thisType == typeof(T))
-                                 && (type.IsGenericParameter || type == typeof(T))))
+            if (thisType == type || (thisType.IsGenericParameter || thisType == typeof(T))
+                                 && (type.IsGenericParameter || type == typeof(T)))
                 return true;
 
             // Handle any generic arguments
