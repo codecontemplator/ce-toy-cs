@@ -47,7 +47,7 @@ namespace ce_toy_cs
                     Applicant = applicant with
                     {
                         Loaders = applicant.Loaders.Skip(1),
-                        KeyValueMap = applicant.Loaders.First().Load(key, applicant.KeyValueMap)
+                        KeyValueMap = applicant.Loaders.First().Load(applicant.Id, key, applicant.KeyValueMap)
                     }
                 };
 
@@ -122,7 +122,7 @@ namespace ce_toy_cs
                     Applicants = context.Applicants.SetItem(applicantId, applicant with
                     {
                         Loaders = applicant.Loaders.Skip(1),
-                        KeyValueMap = applicant.Loaders.First().Load(key, applicant.KeyValueMap)
+                        KeyValueMap = applicant.Loaders.First().Load(applicant.Id, key, applicant.KeyValueMap)
                     })
                 };
 

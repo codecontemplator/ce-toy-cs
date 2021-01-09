@@ -12,6 +12,8 @@ namespace ce_toy_cs
 
             Console.WriteLine($"Process uses keys: {string.Join(',', process.GetKeys())}");
 
+            var loaders = new ILoader[] { new CreitLoader() }.ToImmutableList();
+
             var result = process.Eval(new RuleContext
             {
                 Log = ImmutableList<RuleLogEntry>.Empty,
@@ -27,13 +29,11 @@ namespace ce_toy_cs
                                 Id = "applicant1",
                                 KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 20.0 },
-                                    { "CreditB", 29.0 },
                                     { "Salary", 10 },
                                     { "Role", "Primary" },
                                     { "Address", "Street 1" }
                                 }.ToImmutableDictionary(),
-                                Loaders = ImmutableList<ILoader>.Empty
+                                Loaders = loaders
                             }
                         },
                         {
@@ -43,13 +43,11 @@ namespace ce_toy_cs
                                 Id = "applicant2",
                                 KeyValueMap = new Dictionary<string, object>
                                 {
-                                    { "CreditA", 10.0 },
-                                    { "CreditB", 39.0 },
                                     { "Salary", 41 },
                                     { "Role", "Secondary" },
                                     { "Address", "" }
                                 }.ToImmutableDictionary(),
-                                Loaders = ImmutableList<ILoader>.Empty
+                                Loaders = loaders
                             }
                         }
                     }.ToImmutableDictionary(),
@@ -58,6 +56,36 @@ namespace ce_toy_cs
 
             Console.WriteLine($"Evaluation result (granted amount): {result.Item1}");
             Console.WriteLine($"Evaluation log: {string.Join(',',result.Item2.Log)}");
+        }
+    }
+
+    class CreitLoader : ILoader
+    {
+        public string Name => "CreditLoader";
+
+        public int Cost => 2;
+
+        public IImmutableSet<string> Keys => new[] { "CreditA", "CreditB" }.ToImmutableHashSet();
+
+        public ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input)
+        {
+            return
+                applicantId switch
+                {
+                    "applicant1" =>
+                        input.AddRange(new KeyValuePair<string, object>[]
+                        {
+                            new KeyValuePair<string, object>("CreditA", 20.0),
+                            new KeyValuePair<string, object>("CreditB", 29.0)
+                        }),
+                    "applicant2" =>
+                        input.AddRange(new KeyValuePair<string, object>[]
+                        {
+                            new KeyValuePair<string, object>("CreditA", 10.0),
+                            new KeyValuePair<string, object>("CreditB", 39.0)
+                        }),
+                    _ => throw new KeyNotFoundException($"No data for applicant {applicantId}")
+                };
         }
     }
 }
