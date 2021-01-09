@@ -121,16 +121,19 @@ namespace ce_toy_cs
         private string GetRuleName(MethodCallExpression mce)
         {
             var sb = new StringBuilder();
-            sb.Append(mce.Method.Name);
+            var methodInfo = mce.Method;
+            sb.Append(methodInfo.Name);
+            var parameterInfo = methodInfo.GetParameters();
             sb.Append("(");
-            bool first = true;
+            int i = 0;
             foreach(var arg in mce.Arguments)
             {
                 var carg = (ConstantExpression)arg;
-                if (!first)
+                if (i > 0)
                     sb.Append(",");
+                sb.Append(parameterInfo[i].Name).Append("=");
                 sb.Append(carg.Value);
-                first = false;
+                i++;
             }            
             sb.Append(")");
             return sb.ToString();
