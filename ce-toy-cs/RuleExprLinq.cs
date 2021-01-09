@@ -36,9 +36,9 @@ namespace ce_toy_cs
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            ParameterExpression valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
-            ParameterExpression valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
-            ParameterExpression contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
                 Expression.Block(
@@ -77,13 +77,13 @@ namespace ce_toy_cs
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");            
 
-            ParameterExpression valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>,RuleExprContext)), "valueOptionAndContextAVar");
-            ParameterExpression valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
-            ParameterExpression contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>,RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
-            ParameterExpression valueOptionAndContextBVar = Expression.Variable(typeof((Option<U>, RuleExprContext)), "valueOptionAndContextBVar");
-            ParameterExpression valueOptionBVar = Expression.Variable(typeof(Option<U>), "valueOptionBVar");
-            ParameterExpression contextBVar = Expression.Variable(typeof(RuleExprContext), "contextBVar");
+            var valueOptionAndContextBVar = Expression.Variable(typeof((Option<U>, RuleExprContext)), "valueOptionAndContextBVar");
+            var valueOptionBVar = Expression.Variable(typeof(Option<U>), "valueOptionBVar");
+            var contextBVar = Expression.Variable(typeof(RuleExprContext), "contextBVar");
 
             var functionImplementation =
                 Expression.Block(
@@ -133,9 +133,9 @@ namespace ce_toy_cs
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            ParameterExpression valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
-            ParameterExpression valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
-            ParameterExpression contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
                 Expression.Block(
@@ -176,13 +176,13 @@ namespace ce_toy_cs
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            ParameterExpression valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
-            ParameterExpression valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
-            ParameterExpression contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
-
-            ParameterExpression valueOptionAndContextBVar = Expression.Variable(typeof((Option<ImmutableList<U>>, RuleExprContext)), "valueOptionAndContextBVar");
-            ParameterExpression valueOptionBVar = Expression.Variable(typeof(Option<ImmutableList<U>>), "valueOptionBVar");
-            ParameterExpression contextBVar = Expression.Variable(typeof(RuleExprContext), "contextBVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            
+            var valueOptionAndContextBVar = Expression.Variable(typeof((Option<ImmutableList<U>>, RuleExprContext)), "valueOptionAndContextBVar");
+            var valueOptionBVar = Expression.Variable(typeof(Option<ImmutableList<U>>), "valueOptionBVar");
+            var contextBVar = Expression.Variable(typeof(RuleExprContext), "contextBVar");
 
             var functionImplementation =
                 Expression.Block(
