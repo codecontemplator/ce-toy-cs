@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace ce_toy_cs
 {
@@ -26,13 +27,13 @@ namespace ce_toy_cs
 
     class AtomicRule : IRule
     {
-        public AtomicRule(Expression<Func<RuleExprAst<int, MRuleExprContext>>> expression)
-        {
-            Name = ((MethodCallExpression)expression.Body).Method.Name;
-            var expr = expression.Compile()();
-            Expr = expr.Compile();
-            Keys = ImmutableList.ToImmutableList(expr.GetKeys());
-        }
+        //public AtomicRule(Expression<Func<RuleExprAst<int, MRuleExprContext>>> expression)
+        //{
+        //    Name = ((MethodCallExpression)expression.Body).Method.Name;
+        //    var expr = expression.Compile()();
+        //    Expr = expr.Compile();
+        //    Keys = ImmutableList.ToImmutableList(expr.GetKeys());
+        //}
 
         public AtomicRule(string name, RuleExprAst<int, MRuleExprContext> expr)
         {
@@ -110,11 +111,31 @@ namespace ce_toy_cs
             return this;
         }
 
-        public RuleBuilder Add(Expression<Func<RuleExprAst<int, MRuleExprContext>>> expression)
+        public RuleBuilder Add(Expression<Func<RuleExprAst<int, MRuleExprContext>>> ruleDefintion)
         {
-            return Add(new AtomicRule(expression));
+            var ruleName = GetRuleName((MethodCallExpression)ruleDefintion.Body);
+            var ruleImplementation = ruleDefintion.Compile()();
+            return Add(new AtomicRule(ruleName, ruleImplementation));
         }
 
+        private string GetRuleName(MethodCallExpression mce)
+        {
+            var sb = new StringBuilder();
+            sb.Append(mce.Method.Name);
+            sb.Append("(");
+            bool first = true;
+            foreach(var arg in mce.Arguments)
+            {
+                var carg = (ConstantExpression)arg;
+                if (!first)
+                    sb.Append(",");
+                sb.Append(carg.Value);
+                first = false;
+            }            
+            sb.Append(")");
+            return sb.ToString();
+        }
+        
         public IRule Build() => _current;
     }
 
