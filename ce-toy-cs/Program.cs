@@ -12,21 +12,18 @@ namespace ce_toy_cs
             var process = Process.GetProcess();
 
             Console.WriteLine("# Process created");
-            Console.WriteLine($"Used keys: {string.Join(',', process.GetKeys())}");
+            Console.WriteLine($"Required keys: {string.Join(',', process.GetKeys())}");
             Console.WriteLine();
 
+            Console.WriteLine("# Creating applicants");
             var applicants = new []
             {
                 CreateApplicant("applicant1", process),
                 CreateApplicant("applicant2", process),
             };
-
-            var requestedAmount = 170;
-
-            Console.WriteLine($"# Evaluating process started");
-            Console.WriteLine($"Requested amount: {requestedAmount}");
             Console.WriteLine();
 
+            var requestedAmount = 170;
             var result = process.Eval(new RuleContext
             {
                 Log = ImmutableList<RuleLogEntry>.Empty,
@@ -37,7 +34,8 @@ namespace ce_toy_cs
                 }
             });
 
-            Console.WriteLine($"# Evaluation finished");
+            Console.WriteLine($"# Evaluation");
+            Console.WriteLine($"Requested amount: {requestedAmount}");
             Console.WriteLine($"Granted amount: {result.Item1}");
             Console.WriteLine();
 
@@ -55,7 +53,8 @@ namespace ce_toy_cs
             var aprioreInfo = ApplicantDatabase.Instance.AprioreInfo[applicantId];
             var availableLoaders = new ILoader[] { BaseLoader.Instance, CreditLoader.Instance };
             var requiredKeys = process.GetKeys().ToImmutableHashSet().Except(aprioreInfo.Keys);
-            var selectedLoaders = new ILoader[] { availableLoaders.First(x => x.Keys.IsSupersetOf(requiredKeys)) };
+            var selectedLoaders = requiredKeys.IsEmpty ? new ILoader[] { } : new ILoader[] { availableLoaders.First(x => x.Keys.IsSupersetOf(requiredKeys)) };
+            Console.WriteLine($"{applicantId}: apriore keys={string.Join(',',aprioreInfo.Keys)} loaders={string.Join(',',selectedLoaders.Select(x => x.Name))}");
             return new Applicant
             {
                 Id = applicantId,
@@ -99,7 +98,10 @@ namespace ce_toy_cs
             aprioreInfo["applicant1"] = new Dictionary<string, object>
             {
                 { "Role", "Primary" },
-                { "Address", "Street 1" }
+                { "Address", "Street 1" },
+                { "CreditA", 20.0 },
+                { "CreditB", 29.0 },
+                { "Salary", 10 },
             }.ToImmutableDictionary();
             aprioreInfo["applicant2"] = new Dictionary<string, object>
             {
