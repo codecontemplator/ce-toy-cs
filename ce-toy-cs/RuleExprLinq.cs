@@ -239,6 +239,7 @@ namespace ce_toy_cs
             var valueOptionVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
             var values = Expression.Variable(typeof(ImmutableList<T>));
+            var abortedVar = Expression.Variable(typeof(bool));
             var fVar = Expression.Parameter(typeof(RuleExprAst<T, RuleExprContext>), "f(loopVar)");
             var breakLabel = Expression.Label("LoopBreak");
             var loopBody = Expression.Block(
@@ -248,32 +249,41 @@ namespace ce_toy_cs
                     Expression.IfThenElse(
                         Expression.Equal(Expression.Field(valueOptionVar, "isSome"), Expression.Constant(true)),
                         Expression.Assign(values, Expression.Call(values, typeof(ImmutableList<>).MakeGenericType(typeof(T)).GetMethod("Add"), Expression.Field(valueOptionVar, "value"))),
-                        Expression.Break(breakLabel)
+                        Expression.Block(
+                            Expression.Assign(abortedVar, Expression.Constant(true)),
+                            Expression.Break(breakLabel)
+                        )
                     )
                 );
             var loop = ExpressionEx.ForEach(fsVar, fVar, loopBody, breakLabel);
 
             var functionBody =
                 Expression.Block(
-                    new[] { valueOptionAndContextVar, valueOptionVar, contextVar, values },
+                    new[] { valueOptionAndContextVar, valueOptionVar, contextVar, values, abortedVar },
                     Expression.Assign(contextVar, context),
                     Expression.Assign(values, Expression.Constant(ImmutableList<T>.Empty)),
+                    Expression.Assign(abortedVar, Expression.Constant(false)),
                     loop,
-                    MkTuple<Option<ImmutableList<T>>, RuleExprContext>(WrapSome<ImmutableList<T>>(values), contextVar)
+                    Expression.Condition(
+                        Expression.Equal(abortedVar, Expression.Constant(false)),
+                        MkTuple<Option<ImmutableList<T>>, RuleExprContext>(WrapSome<ImmutableList<T>>(values), contextVar),
+                        MkTuple<Option<ImmutableList<T>>, RuleExprContext>(GetNoneValue<ImmutableList<T>>(), contextVar)
+                    )
                 );
 
             return Expression.Lambda<RuleExpr<ImmutableList<T>, RuleExprContext>>(functionBody, context);
 
             // context =>
             //   var as = []
+            //   var aborted = false;
             //   foreach(var f in fs) 
             //   {
             //      (a, context') = f(contex);
             //      context = context';
-            //      if (!a) break;
+            //      if (!a) { aborted = true; break; }
             //      as.add(a);
             //   }
-            //   return (as, context)
+            //   return aboorted ? (None, context) : (Just as, context)
         }
     }
 }
