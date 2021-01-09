@@ -283,7 +283,7 @@ namespace ce_toy_cs
             //      if (!a) { aborted = true; break; }
             //      as.add(a);
             //   }
-            //   return aboorted ? (None, context) : (Just as, context)
+            //   return aborted ? (None, context) : (Just as, context)
         }
     }
 }
