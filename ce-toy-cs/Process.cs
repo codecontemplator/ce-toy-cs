@@ -36,7 +36,7 @@ namespace ce_toy_cs
                 select reject;
         }
 
-        private static Decision MainApplicantMustHaveAddress()
+        private static Decision PrimaryApplicantMustHaveAddress()
         {
             return
                 Lift(
@@ -55,7 +55,7 @@ namespace ce_toy_cs
                     .Add(() => AbsoluteMaxAmount(100))
                     .Add(() => MaxTotalDebt(50))
                     .Add(() => MinTotalSalary(50))
-                    .Add(() => MainApplicantMustHaveAddress())
+                    .Add(() => PrimaryApplicantMustHaveAddress())
                     .Build();
         }
     }
