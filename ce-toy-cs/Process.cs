@@ -48,6 +48,16 @@ namespace ce_toy_cs
                );
         }
 
+        private static Decision CreditScoreUnderLimit(double limit)
+        {
+            return
+                Lift(
+                    from creditScore in SDsl.GetValue<double>("CreditScore")
+                    where creditScore > limit
+                    select reject
+               );
+        }
+
         public static IRule GetProcess()
         {
             return
@@ -56,6 +66,7 @@ namespace ce_toy_cs
                     .Add(() => MaxTotalDebt(50))
                     .Add(() => MinTotalSalary(50))
                     .Add(() => PrimaryApplicantMustHaveAddress())
+                    .Add(() => CreditScoreUnderLimit(0.8))
                     .Build();
         }
     }
