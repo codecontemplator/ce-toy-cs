@@ -21,6 +21,8 @@ namespace ce_toy_cs
                 CreateApplicant("applicant1", process),
                 CreateApplicant("applicant2", process),
             };
+            foreach(var applicant in applicants) 
+                Console.WriteLine($"{applicant.Id}: a priori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();
 
             var requestedAmount = 170;
@@ -37,6 +39,8 @@ namespace ce_toy_cs
             Console.WriteLine($"# Evaluation");
             Console.WriteLine($"Requested amount: {requestedAmount}");
             Console.WriteLine($"Granted amount: {result.Item1}");
+            foreach (var applicant in result.Item2.RuleExprContext.Applicants.Values)
+                Console.WriteLine($"{applicant.Id}: a posteriori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();
 
             Console.WriteLine($"# Evaluation log");
@@ -50,16 +54,15 @@ namespace ce_toy_cs
 
         private static Applicant CreateApplicant(string applicantId, IRule process)
         {
-            var aprioreInfo = ApplicantDatabase.Instance.AprioreInfo[applicantId];
+            var aprioriInfo = ApplicantDatabase.Instance.AprioreInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };
-            var knownKeys = aprioreInfo.Keys.ToImmutableHashSet();
+            var knownKeys = aprioriInfo.Keys.ToImmutableHashSet();
             var requiredKeys = process.GetKeys().ToImmutableHashSet();
             var selectedLoaders = LoadersSelector.PickOptimizedSet(availableLoaders, knownKeys, requiredKeys).ToList();
-            Console.WriteLine($"{applicantId}: apriore keys={string.Join(',',aprioreInfo.Keys)} loaders={string.Join(',',selectedLoaders.Select(x => x.Name))}");
             return new Applicant
             {
                 Id = applicantId,
-                KeyValueMap = aprioreInfo,
+                KeyValueMap = aprioriInfo,
                 Loaders = selectedLoaders
             };
         }
@@ -99,8 +102,8 @@ namespace ce_toy_cs
             aprioreInfo["applicant1"] = new Dictionary<string, object>
             {
                 { "Role", "Primary" },
-                { "CreditA", 10.0 },
-                { "CreditB", 39.0 },
+                { "CreditA", 20.0 },
+                { "CreditB", 29.0 },
                 { "Salary", 10 },
             }.ToImmutableDictionary();
             aprioreInfo["applicant2"] = new Dictionary<string, object>
