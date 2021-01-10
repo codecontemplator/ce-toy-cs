@@ -79,6 +79,7 @@ namespace ce_toy_cs
         public (int, RuleContext) Eval(RuleContext context)
         {
             var (a, context2) = r1.Eval(context);
+            if (a == 0) return (a, context2);
             var context3 = context2 with { RuleExprContext = context2.RuleExprContext with { Amount = a } };
             return r2.Eval(context3);
         }
