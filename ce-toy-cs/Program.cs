@@ -54,7 +54,7 @@ namespace ce_toy_cs
 
         private static Applicant CreateApplicant(string applicantId, IRule process)
         {
-            var aprioriInfo = ApplicantDatabase.Instance.AprioreInfo[applicantId];
+            var aprioriInfo = ApplicantDatabase.Instance.AprioriInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };
             var knownKeys = aprioriInfo.Keys.ToImmutableHashSet();
             var requiredKeys = process.GetKeys().ToImmutableHashSet();
@@ -113,13 +113,13 @@ namespace ce_toy_cs
 
             AddressInfo = addressInfo.ToImmutableDictionary();
             CreditInfo = creditInfo.ToImmutableDictionary();
-            AprioreInfo = aprioreInfo.ToImmutableDictionary();
+            AprioriInfo = aprioreInfo.ToImmutableDictionary();
         }
 
         public static ApplicantDatabase Instance => _instance;
         public ImmutableDictionary<string, ImmutableDictionary<string, object>> AddressInfo { get; init; }
         public ImmutableDictionary<string, ImmutableDictionary<string, object>> CreditInfo { get; init; }
-        public ImmutableDictionary<string, ImmutableDictionary<string, object>> AprioreInfo { get; init; }
+        public ImmutableDictionary<string, ImmutableDictionary<string, object>> AprioriInfo { get; init; }
     }
 
     class AddressLoader : ILoader
