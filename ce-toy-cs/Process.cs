@@ -62,7 +62,7 @@ namespace ce_toy_cs
         {
             return
                 new RuleBuilder()
-                    .Add(() => AbsoluteMaxAmount(100))
+                    .Add(() => AbsoluteMaxAmount(110))
                     .Add(() => MaxTotalDebt(50))
                     .Add(() => MinTotalSalary(50))
                     .Add(() => PrimaryApplicantMustHaveAddress())
