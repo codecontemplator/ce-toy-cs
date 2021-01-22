@@ -63,19 +63,12 @@ namespace ce_toy_cs
         {
             return
                 new RuleBuilder()
-                    .Add(
-                        AbsoluteMaxAmount(100),
-                        MaxTotalDebt(50)
-                        //MinTotalSalary(50),
-                        //PrimaryApplicantMustHaveAddress(),
-                        //CreditScoreUnderLimit(0.8)
-                    ).Build();
-                    //.Add(() => AbsoluteMaxAmount(100))
-                    //.Add(() => MaxTotalDebt(50))
-                    //.Add(() => MinTotalSalary(50))
-                    //.Add(() => PrimaryApplicantMustHaveAddress())
-                    //.Add(() => CreditScoreUnderLimit(0.8))
-                    //.Build();
+                    .Add(() => AbsoluteMaxAmount(100))
+                    .Add(() => MaxTotalDebt(50))
+                    .Add(() => MinTotalSalary(50))
+                    .Add(() => PrimaryApplicantMustHaveAddress())
+                    .Add(() => CreditScoreUnderLimit(0.8))
+                    .Build();
         }
     }
 }

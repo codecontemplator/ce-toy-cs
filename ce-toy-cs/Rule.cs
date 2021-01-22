@@ -1,4 +1,7 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
+using System.Linq.Expressions;
+using System.Text;
 
 namespace ce_toy_cs
 {
@@ -16,14 +19,36 @@ namespace ce_toy_cs
         {
         }
 
-        public RuleBuilder Add(params RuleExprAst<int, MRuleExprContext>[] ruleExprAsts)
+        public RuleBuilder Add(Expression<Func<RuleExprAst<int, MRuleExprContext>>> ruleDefintion)
         {
-            var i = 0;
+            var ruleName = GetRuleName((MethodCallExpression)ruleDefintion.Body);
+            var ruleImplementation = ruleDefintion.Compile()();
             if (_current == null)
-                _current = ruleExprAsts[i++]; 
-            for (; i < ruleExprAsts.Length; ++i)
-                _current = _current.AndThen(ruleExprAsts[i]);
+                _current = ruleImplementation;
+            else
+                _current = _current.AndThen(ruleImplementation);
             return this;
+        }
+
+        private string GetRuleName(MethodCallExpression mce)
+        {
+            var sb = new StringBuilder();
+            var methodInfo = mce.Method;
+            sb.Append(methodInfo.Name);
+            var parameterInfo = methodInfo.GetParameters();
+            sb.Append("(");
+            int i = 0;
+            foreach (var arg in mce.Arguments)
+            {
+                var carg = (ConstantExpression)arg;
+                if (i > 0)
+                    sb.Append(",");
+                sb.Append(parameterInfo[i].Name).Append("=");
+                sb.Append(carg.Value);
+                i++;
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
 
         public Rule Build()
