@@ -13,16 +13,37 @@ namespace ce_toy_cs
         public ImmutableDictionary<string, object> KeyValueMap { get; init; }
     }
 
-    public record MRuleExprContext
+    public record LogEntry
+    {
+        public string Message { get; init; }
+        public int Amount { get; init; }
+        public object Value { get; init; }
+    }
+
+    public interface IRuleExprContext
+    {
+        int Amount { get; }
+        ImmutableList<LogEntry> Log { get; }
+        IRuleExprContext WithNewAmount(int amount);
+        IRuleExprContext WithLogging(LogEntry entry);
+    }
+
+    public record MRuleExprContext : IRuleExprContext
     {
         public int Amount { get; init; }
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
+        public ImmutableList<LogEntry> Log { get; init; }
+        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
-    public record SRuleExprContext
+    public record SRuleExprContext : IRuleExprContext
     {
         public int Amount { get; init; }
         public Applicant Applicant { get; init; }
+        public ImmutableList<LogEntry> Log { get; init; }
+        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
     public record RuleExprAst<T, RuleExprContext>

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq;
-using static ce_toy_cs.RuleExprTrans;
-using Decision = ce_toy_cs.RuleExprAst<int, ce_toy_cs.MRuleExprContext>;
 
 namespace ce_toy_cs
 {
+    using static RuleExprTrans;
+    using Decision = RuleExprAst<int, MRuleExprContext>;
+
     class Process
     {
         private const int reject = 0;
@@ -58,7 +59,7 @@ namespace ce_toy_cs
                );
         }
 
-        public static IRule GetProcess()
+        public static Rule GetProcess()
         {
             return
                 new RuleBuilder()

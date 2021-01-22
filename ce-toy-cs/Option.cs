@@ -20,5 +20,10 @@
             value = this.value;
             return isSome;
         }
+
+        public override string ToString()
+        {
+            return isSome ? value.ToString() : "<<null>>";
+        }
     }
 }

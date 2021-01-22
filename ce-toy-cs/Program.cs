@@ -12,7 +12,7 @@ namespace ce_toy_cs
             var process = Process.GetProcess();
 
             Console.WriteLine("# Process created");
-            Console.WriteLine($"Required keys: {string.Join(',', process.GetKeys())}");
+            Console.WriteLine($"Required keys: {string.Join(',', process.Keys)}");
             Console.WriteLine();
 
             Console.WriteLine("# Creating applicants");
@@ -26,38 +26,35 @@ namespace ce_toy_cs
             Console.WriteLine();
 
             var requestedAmount = 170;
-            var result = process.Eval(new RuleContext
+            var result = process.RuleExpr(new MRuleExprContext
             {
-                Log = ImmutableList<RuleLogEntry>.Empty,
-                RuleExprContext = new MRuleExprContext
-                {
-                    Amount = requestedAmount,
-                    Applicants = applicants.ToDictionary(x => x.Id).ToImmutableDictionary()
-                }
+                Log = ImmutableList<LogEntry>.Empty,
+                Amount = requestedAmount,
+                Applicants = applicants.ToDictionary(x => x.Id).ToImmutableDictionary()
             });
 
             Console.WriteLine($"# Evaluation");
             Console.WriteLine($"Requested amount: {requestedAmount}");
             Console.WriteLine($"Granted amount: {result.Item1}");
-            foreach (var applicant in result.Item2.RuleExprContext.Applicants.Values)
+            foreach (var applicant in result.Item2.Applicants.Values)
                 Console.WriteLine($"{applicant.Id}: a posteriori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();
 
             Console.WriteLine($"# Evaluation log");
-            Console.WriteLine($"{"Step",-45} | {"Requested",10} | { "Granted", 10}");
+            Console.WriteLine($"{"Message",-45} | {"Amount",10} | { "Value", 10}");
             Console.WriteLine(new string('-', 45 + 10 + 10 + 6));
             foreach(var logRow in result.Item2.Log)
             {
-                Console.WriteLine($"{logRow.RuleName,-45} | { logRow.RequestedAmount, 10} | { logRow.GrantedAmount, 10}");
+                Console.WriteLine($"{logRow.Message,-45} | { logRow.Amount, 10} | { logRow.Value, 10}");
             }
         }
 
-        private static Applicant CreateApplicant(string applicantId, IRule process)
+        private static Applicant CreateApplicant(string applicantId, Rule process)
         {
             var aprioriInfo = ApplicantDatabase.Instance.AprioriInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };
             var knownKeys = aprioriInfo.Keys.ToImmutableHashSet();
-            var requiredKeys = process.GetKeys().ToImmutableHashSet();
+            var requiredKeys = process.Keys.ToImmutableHashSet();
             var selectedLoaders = LoadersSelector.PickOptimizedSet(availableLoaders, knownKeys, requiredKeys).ToList();
             return new Applicant
             {
