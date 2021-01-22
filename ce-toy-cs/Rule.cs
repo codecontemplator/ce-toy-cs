@@ -23,10 +23,11 @@ namespace ce_toy_cs
         {
             var ruleName = GetRuleName((MethodCallExpression)ruleDefintion.Body);
             var ruleImplementation = ruleDefintion.Compile()();
+            var loggingRuleImplementation = ruleImplementation.WithLogging(ruleName);
             if (_current == null)
-                _current = ruleImplementation;
+                _current = loggingRuleImplementation;
             else
-                _current = _current.AndThen(ruleImplementation);
+                _current = _current.AndThen(loggingRuleImplementation);
             return this;
         }
 

@@ -25,6 +25,7 @@ namespace ce_toy_cs
         int Amount { get; }
         ImmutableList<LogEntry> Log { get; }
         IRuleExprContext WithNewAmount(int amount);
+        IRuleExprContext WithLogging(LogEntry entry);
     }
 
     public record MRuleExprContext : IRuleExprContext
@@ -33,6 +34,7 @@ namespace ce_toy_cs
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
         public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
     public record SRuleExprContext : IRuleExprContext
@@ -41,6 +43,7 @@ namespace ce_toy_cs
         public Applicant Applicant { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
         public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
     public record RuleExprAst<T, RuleExprContext>
