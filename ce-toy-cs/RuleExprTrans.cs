@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace ce_toy_cs
@@ -50,12 +51,14 @@ namespace ce_toy_cs
                 var (newAmountOption, newSContext) = sRule(new SRuleExprContext
                 {
                     Amount = mcontext.Amount,
-                    Applicant = applicant
+                    Applicant = applicant,
+                    Log = ImmutableList<LogEntry>.Empty,
                 });
 
                 var newMContext = mcontext with
                 {
-                    Applicants = mcontext.Applicants.SetItem(applicant.Id, newSContext.Applicant)
+                    Applicants = mcontext.Applicants.SetItem(applicant.Id, newSContext.Applicant),
+                    Log = mcontext.Log.AddRange(newSContext.Log)
                 };
 
                 if (newAmountOption.IsSome(out var newAmount))
