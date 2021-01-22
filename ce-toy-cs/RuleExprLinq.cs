@@ -32,6 +32,56 @@ namespace ce_toy_cs
             return Expression.Invoke(getNoneValue);
         }
 
+        public static RuleExprAst<int, RuleExprContext> AndThen<RuleExprContext>(this RuleExprAst<int, RuleExprContext> expr, RuleExprAst<int, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
+        {
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<int>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<int>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+
+            var functionImplementation =
+                Expression.Block(
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
+                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
+                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
+                    Expression.Condition(
+                        Expression.AndAlso(
+                            Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                            Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(0))),
+                        MkTuple<Option<int>, RuleExprContext>(
+                            WrapSome<int>(Expression.Field(valueOptionAVar, "value")),
+                            contextAVar
+                        ),
+                        Expression.Invoke(
+                            exprNext.Expression,
+                            Expression.Convert(
+                                Expression.Call(
+                                    contextAVar,
+                                    typeof(IRuleExprContext).GetMethod("WithNewAmount"),
+                                    Expression.Condition(
+                                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                                        Expression.Field(valueOptionAVar, "value"),
+                                        Expression.Property(contextAVar, "Amount")
+                                    )
+                                ),
+                                typeof(RuleExprContext)
+                            )
+                        )
+                    )
+                );
+
+            var functionBody =
+                Expression.Block(
+                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
+                    functionImplementation
+                );
+
+            var function = Expression.Lambda<RuleExpr<int, RuleExprContext>>(functionBody, context);
+
+            return new RuleExprAst<int, RuleExprContext> { Expression = function };
+        }
+
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
