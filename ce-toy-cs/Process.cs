@@ -17,6 +17,18 @@ namespace ce_toy_cs
                 select Math.Min(amount, amountLimit);
         }
 
+        private static Decision ConditionRule()
+        {
+            return
+               Lift(                    
+                    from street in SDsl.GetValue<string>("Street")
+                    where Condition.Require(street != null, "street must be specified")
+                    from postaddress in SDsl.GetValue<string>("PostAddress")
+                    where Condition.Require(postaddress != null, "post address must be specified")
+                    select reject
+               );
+        }
+
         private static Decision MaxTotalDebt(double debtLimit)
         {
             return

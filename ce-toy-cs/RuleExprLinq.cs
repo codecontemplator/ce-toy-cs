@@ -2,11 +2,27 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
+    public class Condition
+    {
+        public bool Value { get; }
+        public string Message { get; }
+
+        public Condition(bool value, string message)
+        {
+            Value = value;
+            Message = message;
+        }
+
+        public static Condition Require(bool value, string message)
+        {
+            return new Condition(!value, message);
+        }
+    }
+
     static class RuleExprLinq
     {
         public static RuleExprAst<T, RuleExprContext> Wrap<T, RuleExprContext>(T value)
@@ -221,6 +237,64 @@ namespace ce_toy_cs
             //    var (b, context3) = selector(a)(context2);
             //    return (projector(a, b), context3);
             //};
+        }
+
+        public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, Condition>> predicate)
+        {
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            var predicateResultVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+
+            var functionImplementation =
+                Expression.Block(
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
+                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
+                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
+                    Expression.Condition(
+                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                        Expression.Block(
+                            Expression.Assign(predicateResultVar, Expression.Invoke(predicate, Expression.Field(valueOptionAVar, "value"))),
+                            Expression.Condition(
+                                Expression.Equal(Expression.Property(predicateResultVar, "Value"), Expression.Constant(true)),
+                                valueOptionAndContextAVar,
+                                MkTuple<Option<T>, RuleExprContext>(
+                                    GetNoneValue<T>(),
+                                    Expression.Convert(
+                                        Expression.Call(
+                                            contextAVar,
+                                            typeof(IRuleExprContext).GetMethod("WithLogging"),
+                                            CreateLogEntry(
+                                                Expression.Property(predicateResultVar, "Message"),
+                                                Expression.Property(contextAVar, "Amount"),
+                                                Expression.Convert(valueOptionAVar, typeof(object))
+                                                )
+                                        ),
+                                        typeof(RuleExprContext)
+                                    )
+                                )
+                            )
+                        ),
+                        valueOptionAndContextAVar
+                    )
+                );
+
+            var functionBody =
+                Expression.Block(
+                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar, predicateResultVar },
+                    functionImplementation
+                );
+
+            var function = Expression.Lambda<RuleExpr<T, RuleExprContext>>(functionBody, context);
+            return new RuleExprAst<T, RuleExprContext> { Expression = function };
+
+            //  return context => 
+            //  {
+            //      var (a, context') = expr(context);
+            //      return predicate(a) ? (Some(a), context'), (None, context' with Log=...));
+            //  }
         }
 
         public static RuleExprAst<T, RuleExprContext> Where<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, bool>> predicate)
