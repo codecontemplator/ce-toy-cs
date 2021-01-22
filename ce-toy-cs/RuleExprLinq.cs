@@ -77,10 +77,6 @@ namespace ce_toy_cs
             var function = Expression.Lambda<RuleExpr<T, RuleExprContext>>(functionBody, context);
 
             return new RuleExprAst<T, RuleExprContext> { Expression = function };
-
-            // return context =>
-            //    (value, contex') = expr(context)
-            //    context'' = context with { log = new LogEntry { Message = message, Amount = context'.Amount, Value = value }
         }
 
         public static RuleExprAst<int, RuleExprContext> AndThen<RuleExprContext>(this RuleExprAst<int, RuleExprContext> expr, RuleExprAst<int, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
