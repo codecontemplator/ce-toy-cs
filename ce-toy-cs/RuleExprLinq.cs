@@ -100,10 +100,7 @@ namespace ce_toy_cs
                         Expression.AndAlso(
                             Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
                             Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(0))),
-                        MkTuple<Option<int>, RuleExprContext>(
-                            WrapSome<int>(Expression.Field(valueOptionAVar, "value")),
-                            contextAVar
-                        ),
+                        valueOptionAndContextAVar,
                         Expression.Invoke(
                             exprNext.Expression,
                             Expression.Convert(
