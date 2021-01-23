@@ -60,7 +60,7 @@ namespace ce_toy_cs
                ).Lift();
         }
 
-        private static RuleExprAst Policies(int minAge, int maxAge, int maxRemarks)
+        private static RuleExprAst Policies(int minAge, int maxAge, int maxFlags)
         {
             SRuleExprAst Policy<T>(string varName, Expression<Func<T,bool>> predicate, string message) =>
                 SDsl.GetValue<T>(varName).Where(predicate).Select(_ => reject).WithLogging(message);
@@ -68,7 +68,7 @@ namespace ce_toy_cs
             return
                 Policy<int> ("Age",      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}" ).AndThen(
                 Policy<bool>("Deceased", deceased => deceased,                $"Must be alive"                                           )).AndThen(
-                Policy<int> ("Flags",    flags => flags >= 2,                 $"Flags must be less than {maxRemarks}"                    )).Lift();
+                Policy<int> ("Flags",    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                    )).Lift();
         }
 
         public static Rule GetProcess()
