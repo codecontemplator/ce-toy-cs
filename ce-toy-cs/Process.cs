@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
     using RuleExprAst = RuleExprAst<int, MRuleExprContext>;
+    using SRuleExprAst = RuleExprAst<int, SRuleExprContext>;
 
     class Process
     {
@@ -60,10 +62,13 @@ namespace ce_toy_cs
 
         private static RuleExprAst Policies(int minAge, int maxAge, int maxRemarks)
         {
+            SRuleExprAst Policy<T>(string varName, Expression<Func<T,bool>> predicate, string message) =>
+                SDsl.GetValue<T>(varName).Where(predicate).Select(_ => reject).WithLogging(message);
+
             return
-                 SDsl.GetValue<int> ("Age")      .Where(age => age < minAge || age > maxAge)  .Select(_ => reject).WithLogging($"Age must be greater than {minAge} and less than {maxAge}").AndThen(
-                 SDsl.GetValue<bool>("Deceased") .Where(deceased => deceased)                 .Select(_ => reject).WithLogging($"Must be alive")).AndThen(
-                 SDsl.GetValue<int> ("Flags")    .Where(flags => flags >= 2)                  .Select(_ => reject).WithLogging($"Flags must be less than {maxRemarks}")).Lift();
+                Policy<int> ("Age",      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}" ).AndThen(
+                Policy<bool>("Deceased", deceased => deceased,                $"Must be alive"                                           )).AndThen(
+                Policy<int> ("Flags",    flags => flags >= 2,                 $"Flags must be less than {maxRemarks}"                    )).Lift();
         }
 
         public static Rule GetProcess()
