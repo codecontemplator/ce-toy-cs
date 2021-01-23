@@ -15,12 +15,12 @@ namespace ce_toy_cs
 
     static class RuleExprTrans
     {
-        public static RuleExprAst<int, MRuleExprContext> Lift(RuleExprAst<int, SRuleExprContext> sRuleExprAst)
+        public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst)
         {
             return Lift(sRuleExprAst, VotingMethods.SelectMin);
         }
 
-        public static RuleExprAst<int, MRuleExprContext> Lift(RuleExprAst<int, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, int)>, int> vote)
+        public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, int)>, int> vote)
         {
             var sRule = sRuleExprAst.Compile();
             var sKeys = sRuleExprAst.GetKeys();

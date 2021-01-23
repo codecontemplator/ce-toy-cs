@@ -87,12 +87,14 @@ namespace ce_toy_cs
                 { "CreditA", 20.0 },
                 { "CreditB", 29.0 },
                 { "Salary", 10 },
+                { "Flags", 1 }
             }.ToImmutableDictionary();
             creditInfo["applicant2"] = new Dictionary<string, object>
             {
                 { "CreditA", 10.0 },
                 { "CreditB", 39.0 },
                 { "Salary", 41 },
+                { "Flags", 0 }
             }.ToImmutableDictionary();
 
             var aprioreInfo = new Dictionary<string, ImmutableDictionary<string, object>>();
@@ -102,10 +104,14 @@ namespace ce_toy_cs
                 { "CreditA", 20.0 },
                 { "CreditB", 29.0 },
                 { "Salary", 10 },
+                { "Age", 50 },
+                { "Deceased", false }
             }.ToImmutableDictionary();
             aprioreInfo["applicant2"] = new Dictionary<string, object>
             {
                 { "Role", "Secondary" },
+                { "Age", 59 },
+                { "Deceased", false }
             }.ToImmutableDictionary();
 
             AddressInfo = addressInfo.ToImmutableDictionary();
@@ -146,7 +152,7 @@ namespace ce_toy_cs
         public int Cost => 2;
 
         public IImmutableSet<string> RequiredKeys => ImmutableHashSet<string>.Empty;
-        public IImmutableSet<string> LoadedKeys => new[] { "Salary", "CreditA", "CreditB" }.ToImmutableHashSet();
+        public IImmutableSet<string> LoadedKeys => new[] { "Salary", "CreditA", "CreditB", "Flags" }.ToImmutableHashSet();
 
         public ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input)
         {
