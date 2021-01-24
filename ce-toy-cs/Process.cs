@@ -65,15 +65,12 @@ namespace ce_toy_cs
 
         private static RuleExprAst Policies(int minAge, int maxAge, int maxFlags)
         {
-            SRuleExprAst Policy<T>(Variable<T> variable, Expression<Func<T,bool>> predicate, string message) =>
-                variable.Value.Where(predicate).Select(_ => reject).WithLogging(message);
-
             return
                 new []
                 {
-                    Policy(Variables.Age,      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
-                    Policy(Variables.Deceased, deceased => deceased,                $"Must be alive"                                           ),
-                    Policy(Variables.Flags,    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                      )
+                    Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
+                    Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
+                    Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
                 }.Join().Lift();
         }
 
