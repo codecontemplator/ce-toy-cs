@@ -14,7 +14,7 @@ namespace ce_toy_cs
         {
             return
                 from amount in MDsl.GetAmount()
-                select Decision.AcceptGivenAmount(Math.Min(amount, amountLimit));
+                select Decision.AcceptLoweredAmount(Math.Min(amount, amountLimit));
         }
 
         private static RuleExprAst MaxTotalDebt(double debtLimit)
