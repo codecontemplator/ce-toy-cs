@@ -2,13 +2,11 @@
 using ce_toy_cs.VariableTypes;
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
     using Convert = Framework.Convert;
     using RuleExprAst = RuleExprAst<int, MRuleExprContext>;
-    using SRuleExprAst = RuleExprAst<int, SRuleExprContext>;
 
     class Process
     {
