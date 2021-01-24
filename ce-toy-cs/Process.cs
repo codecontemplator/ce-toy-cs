@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 namespace ce_toy_cs
 {
+    using Convert = Framework.Convert;
     using RuleExprAst = RuleExprAst<int, MRuleExprContext>;
     using SRuleExprAst = RuleExprAst<int, SRuleExprContext>;
 
@@ -79,14 +80,15 @@ namespace ce_toy_cs
         public static Rule GetProcess()
         {
             return
-                new RuleBuilder()
-                    .Add(() => AbsoluteMaxAmount(100))
-                    .Add(() => Policies(18, 100, 2))
-                    .Add(() => MaxTotalDebt(50))
-                    .Add(() => MinTotalSalary(50))
-                    .Add(() => PrimaryApplicantMustHaveAddress())
-                    .Add(() => CreditScoreUnderLimit(0.8))
-                    .Build();
+                new[]
+                {
+                    Convert.ToRuleExprAst(() => AbsoluteMaxAmount(100)),
+                    Convert.ToRuleExprAst(() => Policies(18, 100, 2)),
+                    Convert.ToRuleExprAst(() => MaxTotalDebt(50)),
+                    Convert.ToRuleExprAst(() => MinTotalSalary(50)),
+                    Convert.ToRuleExprAst(() => PrimaryApplicantMustHaveAddress()),
+                    Convert.ToRuleExprAst(() => CreditScoreUnderLimit(0.8))
+                }.Join().CompileToRule();
         }
     }
 }
