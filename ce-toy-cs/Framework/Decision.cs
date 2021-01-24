@@ -6,7 +6,7 @@ namespace ce_toy_cs.Framework
 {
     public enum DecisionType
     {
-        Accept, Reject, AcceptGivenAmount
+        Accept, Reject, AcceptLoweredAmount
     }
 
     public record Decision
@@ -16,7 +16,7 @@ namespace ce_toy_cs.Framework
 
         public static Decision Accept { get; } = new Decision { Type = DecisionType.Accept };
         public static Decision Reject { get; } = new Decision { Type = DecisionType.Reject, Amount = 0 };
-        public static Decision AcceptGivenAmount(int amount) => new Decision { Type = DecisionType.AcceptGivenAmount, Amount = amount };
+        public static Decision AcceptGivenAmount(int amount) => new Decision { Type = DecisionType.AcceptLoweredAmount, Amount = amount };
     }
 
     public static class DecisionExtensions
@@ -29,14 +29,14 @@ namespace ce_toy_cs.Framework
                     return x;
                 case DecisionType.Accept:
                     return y;
-                case DecisionType.AcceptGivenAmount:
+                case DecisionType.AcceptLoweredAmount:
                     switch(y.Type)
                     {
                         case DecisionType.Reject:
                             return y;
                         case DecisionType.Accept:
                             return x;
-                        case DecisionType.AcceptGivenAmount:
+                        case DecisionType.AcceptLoweredAmount:
                             return Decision.AcceptGivenAmount(Math.Min(x.Amount.Value, y.Amount.Value));
                     }
                     break;
@@ -60,7 +60,7 @@ namespace ce_toy_cs.Framework
                         return result.Item2.Amount;
                     case DecisionType.Reject:
                         return 0;
-                    case DecisionType.AcceptGivenAmount:
+                    case DecisionType.AcceptLoweredAmount:
                         return decision.Amount.Value;
                     default:
                         throw new Exception("Unknown decision type");

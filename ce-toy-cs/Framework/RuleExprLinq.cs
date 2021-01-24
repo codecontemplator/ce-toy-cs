@@ -108,7 +108,7 @@ namespace ce_toy_cs.Framework
                                     Expression.Condition(
                                         Expression.AndAlso(
                                             Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                                            Expression.Equal(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Type"), Expression.Constant(DecisionType.AcceptGivenAmount))),
+                                            Expression.Equal(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Type"), Expression.Constant(DecisionType.AcceptLoweredAmount))),
                                         Expression.Property(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Amount"), "Value"),
                                         Expression.Property(contextAVar, "Amount")
                                     )
