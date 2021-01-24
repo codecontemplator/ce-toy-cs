@@ -79,7 +79,7 @@ namespace ce_toy_cs.Framework
             return new RuleExprAst<T, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<int, RuleExprContext> AndThen<RuleExprContext>(this RuleExprAst<int, RuleExprContext> expr, RuleExprAst<int, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
+        public static RuleExprAst<int, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<int, RuleExprContext> expr, RuleExprAst<int, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
@@ -384,7 +384,7 @@ namespace ce_toy_cs.Framework
         {
             var result = ruleExprAsts.First();
             foreach (var next in ruleExprAsts.Skip(1))
-                result = result.AndThen(next);
+                result = result.Join(next);
             return result;
         }
 
