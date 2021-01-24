@@ -8,20 +8,21 @@ namespace ce_toy_cs.Framework
 {
     static class VotingMethods
     {
-        public static int SelectMin(IEnumerable<(Applicant, int)> arg)
+        public static Decision SelectMin(IEnumerable<(Applicant, Decision)> arg)
         {
-            return arg.Min(x => x.Item2);
+            var decisions = arg.Select(x => x.Item2).ToList();
+            return decisions.Min();
         }
     }
 
     static class RuleExprTrans
     {
-        public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst)
+        public static RuleExprAst<Decision, MRuleExprContext> Lift(this RuleExprAst<Decision, SRuleExprContext> sRuleExprAst)
         {
             return sRuleExprAst.Lift(VotingMethods.SelectMin);
         }
 
-        public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, int)>, int> vote)
+        public static RuleExprAst<Decision, MRuleExprContext> Lift(this RuleExprAst<Decision, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, Decision)>, Decision> vote)
         {
             var sRule = sRuleExprAst.Compile();
             var sKeys = sRuleExprAst.GetKeys();
@@ -30,7 +31,7 @@ namespace ce_toy_cs.Framework
                 select vote(evalResult);
         }
 
-        private static RuleExprAst<IEnumerable<(Applicant, int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<IEnumerable<(Applicant, Decision)>, MRuleExprContext> MEval(RuleExpr<Decision, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
             return
                 from applicants in MDsl.GetApplicants()
@@ -38,15 +39,15 @@ namespace ce_toy_cs.Framework
                 select amountApplicantPairs;
         }
 
-        private static RuleExprAst<(Applicant, int), MRuleExprContext> SEval(Applicant applicant, RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<(Applicant, Decision), MRuleExprContext> SEval(Applicant applicant, RuleExpr<Decision, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
-            return new RuleExprAst<(Applicant, int), MRuleExprContext>
+            return new RuleExprAst<(Applicant, Decision), MRuleExprContext>
             {
                 Expression = mcontext => SEvalImpl(applicant, sRule)(mcontext)
             };
         }
 
-        private static RuleExpr<(Applicant, int), MRuleExprContext> SEvalImpl(Applicant applicant, RuleExpr<int, SRuleExprContext> sRule)
+        private static RuleExpr<(Applicant, Decision), MRuleExprContext> SEvalImpl(Applicant applicant, RuleExpr<Decision, SRuleExprContext> sRule)
         {
             return mcontext =>
             {
@@ -63,13 +64,13 @@ namespace ce_toy_cs.Framework
                     Log = mcontext.Log.AddRange(newSContext.Log)
                 };
 
-                if (newAmountOption.IsSome(out var newAmount))
+                if (newAmountOption.IsSome(out var decision))
                 {
-                    return (Option<(Applicant, int)>.Some((applicant, newAmount)), newMContext);  // Rule applied to applicant and gave a result
+                    return (Option<(Applicant, Decision)>.Some((applicant, decision)), newMContext);  // Rule applied to applicant and gave a result
                 }
                 else
                 {
-                    return (Option<(Applicant, int)>.Some((applicant, mcontext.Amount)), newMContext);  // Rule did not apply to applicant => amount is not affected => granted amount = requested amount
+                    return (Option<(Applicant, Decision)>.Some((applicant, Decision.Accept)), newMContext);  // Rule did not apply to applicant => accept
                 }
             };
         }
