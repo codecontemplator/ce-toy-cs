@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     public record Rule
     {
@@ -57,7 +57,7 @@ namespace ce_toy_cs
             return new Rule
             {
                 RuleExpr = _current.Compile(),
-                Keys = ImmutableList.ToImmutableList(_current.GetKeys())
+                Keys = _current.GetKeys().ToImmutableList()
             };
         }
     }

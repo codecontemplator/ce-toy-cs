@@ -1,11 +1,11 @@
-﻿using ce_toy_cs.Details;
+﻿using ce_toy_cs.Framework.Details;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     static class RuleExprLinq
     {
@@ -16,7 +16,7 @@ namespace ce_toy_cs
 
         private static Expression MkTuple<T1, T2>(Expression t1, Expression t2)
         {
-            Expression<Func<T1, T2, (T1, T2)>> toTuple = (x, y) => new Tuple<T1,T2>(x, y).ToValueTuple();
+            Expression<Func<T1, T2, (T1, T2)>> toTuple = (x, y) => new Tuple<T1, T2>(x, y).ToValueTuple();
             return Expression.Invoke(toTuple, t1, t2);
         }
 
@@ -34,11 +34,11 @@ namespace ce_toy_cs
 
         private static Expression CreateLogEntry(Expression messageExpr, Expression amountExpr, Expression valueExpr)
         {
-            Expression<Func<string,int,object,LogEntry>> createLogEntry = (message, amount, value) => new LogEntry { Message = message, Amount = amount, Value = value };
+            Expression<Func<string, int, object, LogEntry>> createLogEntry = (message, amount, value) => new LogEntry { Message = message, Amount = amount, Value = value };
             return Expression.Invoke(createLogEntry, messageExpr, amountExpr, valueExpr);
         }
 
-        public static RuleExprAst<T, RuleExprContext> WithLogging<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, string message)
+        public static RuleExprAst<T, RuleExprContext> WithLogging<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, string message)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
@@ -52,7 +52,7 @@ namespace ce_toy_cs
                     Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     MkTuple<Option<T>, RuleExprContext>(
-                        valueOptionAVar, 
+                        valueOptionAVar,
                         Expression.Convert(
                             Expression.Call(
                                 contextAVar,
@@ -169,9 +169,9 @@ namespace ce_toy_cs
 
         public static RuleExprAst<V, RuleExprContext> SelectMany<T, U, V, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, RuleExprAst<U, RuleExprContext>>> selector, Expression<Func<T, U, V>> projector)
         {
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");            
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>,RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
             var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
@@ -196,7 +196,7 @@ namespace ce_toy_cs
                             Expression.Assign(contextBVar, Expression.Field(valueOptionAndContextBVar, "Item2")),
                             Expression.Condition(
                                 Expression.Equal(Expression.Field(valueOptionBVar, "isSome"), Expression.Constant(true)),
-                                MkTuple<Option<V>,RuleExprContext>(
+                                MkTuple<Option<V>, RuleExprContext>(
                                     WrapSome<V>(Expression.Invoke(projector, Expression.Field(valueOptionAVar, "value"), Expression.Field(valueOptionBVar, "value"))),
                                     contextBVar
                                 ),
@@ -209,7 +209,7 @@ namespace ce_toy_cs
 
             var functionBody =
                 Expression.Block(
-                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar, valueOptionAndContextBVar, valueOptionBVar, contextBVar},
+                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar, valueOptionAndContextBVar, valueOptionBVar, contextBVar },
                     functionImplementation
                 );
             var function = Expression.Lambda<RuleExpr<V, RuleExprContext>>(functionBody, context);
@@ -273,7 +273,7 @@ namespace ce_toy_cs
             var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
             var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
-            
+
             var valueOptionAndContextBVar = Expression.Variable(typeof((Option<ImmutableList<U>>, RuleExprContext)), "valueOptionAndContextBVar");
             var valueOptionBVar = Expression.Variable(typeof(Option<ImmutableList<U>>), "valueOptionBVar");
             var contextBVar = Expression.Variable(typeof(RuleExprContext), "contextBVar");

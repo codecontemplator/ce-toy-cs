@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace ce_toy_cs.Details
+namespace ce_toy_cs.Framework.Details
 {
     static class ReflectionEx
     {

@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ce_toy_cs;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     static class SDsl
     {
@@ -12,7 +13,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<int, SRuleExprContext>
                 {
-                    Expression = (context => new Tuple<Option<int>, SRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple())
+                    Expression = context => new Tuple<Option<int>, SRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple()
                 };
         }
 
@@ -63,7 +64,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<int, MRuleExprContext>
                 {
-                    Expression = (context => new Tuple<Option<int>, MRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple())
+                    Expression = context => new Tuple<Option<int>, MRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple()
                 };
         }
 
@@ -76,7 +77,7 @@ namespace ce_toy_cs
         {
             return
                 from applicants in GetApplicants()
-                from values in (from applicantId in applicants.Keys where predicate(applicants[applicantId]) select GetValue<T>(applicantId, key))
+                from values in from applicantId in applicants.Keys where predicate(applicants[applicantId]) select GetValue<T>(applicantId, key)
                 select values;
         }
 
@@ -94,7 +95,7 @@ namespace ce_toy_cs
             return
                 new RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext>
                 {
-                    Expression = (context => new Tuple<Option<ImmutableDictionary<string, Applicant>>, MRuleExprContext>(Option<ImmutableDictionary<string, Applicant>>.Some(context.Applicants), context).ToValueTuple())
+                    Expression = context => new Tuple<Option<ImmutableDictionary<string, Applicant>>, MRuleExprContext>(Option<ImmutableDictionary<string, Applicant>>.Some(context.Applicants), context).ToValueTuple()
                 };
         }
 

@@ -16,7 +16,7 @@
 #endregion
 
 // Ref: https://github.com/morelinq/MoreLINQ/blob/ec4bbd3c7ca61e3a98695aaa2afb23da001ee420/MoreLinq/MinBy.cs
-namespace MoreLinq
+namespace ce_toy_cs.Framework.Details
 {
     using System;
     using System.Collections.Generic;

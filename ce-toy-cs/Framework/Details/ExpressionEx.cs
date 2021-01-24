@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs.Details
+namespace ce_toy_cs.Framework.Details
 {
     static class ExpressionEx
     {

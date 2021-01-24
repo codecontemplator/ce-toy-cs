@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     public class FindKeysVisistor : ExpressionVisitor
     {

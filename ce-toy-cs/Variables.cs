@@ -1,4 +1,6 @@
-﻿namespace ce_toy_cs
+﻿using ce_toy_cs.Framework;
+
+namespace ce_toy_cs
 {
     namespace VariableTypes
     {

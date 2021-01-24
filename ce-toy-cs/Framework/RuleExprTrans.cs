@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ce_toy_cs.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     static class VotingMethods
     {
@@ -17,7 +18,7 @@ namespace ce_toy_cs
     {
         public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst)
         {
-            return Lift(sRuleExprAst, VotingMethods.SelectMin);
+            return sRuleExprAst.Lift(VotingMethods.SelectMin);
         }
 
         public static RuleExprAst<int, MRuleExprContext> Lift(this RuleExprAst<int, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, int)>, int> vote)
@@ -29,17 +30,18 @@ namespace ce_toy_cs
                 select vote(evalResult);
         }
 
-        private static RuleExprAst<IEnumerable<(Applicant,int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<IEnumerable<(Applicant, int)>, MRuleExprContext> MEval(RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
             return
                 from applicants in MDsl.GetApplicants()
-                from amountApplicantPairs in (from applicant in applicants.Values select SEval(applicant, sRule, sKeys))
+                from amountApplicantPairs in from applicant in applicants.Values select SEval(applicant, sRule, sKeys)
                 select amountApplicantPairs;
         }
 
         private static RuleExprAst<(Applicant, int), MRuleExprContext> SEval(Applicant applicant, RuleExpr<int, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
-            return new RuleExprAst<(Applicant, int), MRuleExprContext> {
+            return new RuleExprAst<(Applicant, int), MRuleExprContext>
+            {
                 Expression = mcontext => SEvalImpl(applicant, sRule)(mcontext)
             };
         }

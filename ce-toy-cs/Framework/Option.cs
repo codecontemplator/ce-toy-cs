@@ -1,4 +1,4 @@
-﻿namespace ce_toy_cs
+﻿namespace ce_toy_cs.Framework
 {
     // ref: https://www.enterprise-software-development.eu/posts/2019/11/19/option-type.html
     public struct Option<T>

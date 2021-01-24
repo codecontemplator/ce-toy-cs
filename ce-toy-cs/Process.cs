@@ -1,4 +1,5 @@
-﻿using ce_toy_cs.VariableTypes;
+﻿using ce_toy_cs.Framework;
+using ce_toy_cs.VariableTypes;
 using System;
 using System.Linq;
 using System.Linq.Expressions;

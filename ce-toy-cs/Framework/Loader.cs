@@ -1,10 +1,11 @@
-﻿using MoreLinq;
+﻿using ce_toy_cs;
+using ce_toy_cs.Framework.Details;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ce_toy_cs
+namespace ce_toy_cs.Framework
 {
     public interface ILoader
     {
@@ -14,7 +15,7 @@ namespace ce_toy_cs
         IImmutableSet<string> LoadedKeys { get; }
         ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input);
     }
-    
+
     class LoadersSelector
     {
         private class Node
@@ -53,7 +54,7 @@ namespace ce_toy_cs
 
         public static IEnumerable<ILoader> PickOptimizedSet(
             IEnumerable<ILoader> availableLoaders,
-            IImmutableSet<string> knownKeys, 
+            IImmutableSet<string> knownKeys,
             IImmutableSet<string> requiredKeys
             )
         {
@@ -64,11 +65,11 @@ namespace ce_toy_cs
             return bestSolution.edges.Select(x => x.Loader);
         }
 
-        private static ImmutableList<(int weight,ImmutableList<Edge> edges)> Solve(Node currentNode, Node goalNode, IEnumerable<Edge> edges)
+        private static ImmutableList<(int weight, ImmutableList<Edge> edges)> Solve(Node currentNode, Node goalNode, IEnumerable<Edge> edges)
         {
             if (goalNode.CompareTo(currentNode))
                 return new[] { (0, ImmutableList<Edge>.Empty) }.ToImmutableList();
-            
+
             var (directEdges, indirectEdges) = Partition(edges, e => e.Source.CompareTo(currentNode));
             var result =
                 from re in RemoveEach(directEdges)
@@ -80,17 +81,17 @@ namespace ce_toy_cs
 
         private static IEnumerable<(T e, ImmutableList<T> es)> RemoveEach<T>(ImmutableList<T> xs)
         {
-            for(int i=0; i<xs.Count; ++i)
+            for (int i = 0; i < xs.Count; ++i)
             {
                 yield return (xs.ElementAt(i), xs.RemoveAt(i));
             }
         }
 
-        private static (ImmutableList<Edge>, ImmutableList<Edge>) Partition(IEnumerable<Edge> edges, Func<Edge,bool> isDirectEdge)
+        private static (ImmutableList<Edge>, ImmutableList<Edge>) Partition(IEnumerable<Edge> edges, Func<Edge, bool> isDirectEdge)
         {
             var directEdges = new List<Edge>();
             var indirectEdges = new List<Edge>();
-            foreach(var edge in edges)
+            foreach (var edge in edges)
             {
                 if (isDirectEdge(edge))
                     directEdges.Add(edge);
