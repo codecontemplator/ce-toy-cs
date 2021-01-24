@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ce_toy_cs.VariableTypes;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -74,44 +75,44 @@ namespace ce_toy_cs
             var addressInfo = new Dictionary<string, ImmutableDictionary<string, object>>();
             addressInfo["applicant1"] = new Dictionary<string, object>
             {
-                { "Address", "Street 1" }
+                { Variables.Address, new Address { Street = "Street 1", PostalCode = "12345" } }
             }.ToImmutableDictionary();
             addressInfo["applicant2"] = new Dictionary<string, object>
             {
-                { "Address", "" }
+                { Variables.Address, new Address { Street = "" } }
             }.ToImmutableDictionary();
 
             var creditInfo = new Dictionary<string, ImmutableDictionary<string, object>>();
             creditInfo["applicant1"] = new Dictionary<string, object>
             {
-                { "CreditA", 20.0 },
-                { "CreditB", 29.0 },
-                { "Salary", 10 },
-                { "Flags", 1 }
+                { Variables.CreditA, 20 },
+                { Variables.CreditB, 29 },
+                { Variables.Salary, 10 },
+                { Variables.Flags, 1 }
             }.ToImmutableDictionary();
             creditInfo["applicant2"] = new Dictionary<string, object>
             {
-                { "CreditA", 10.0 },
-                { "CreditB", 39.0 },
-                { "Salary", 41 },
-                { "Flags", 0 }
+                { Variables.CreditA, 10 },
+                { Variables.CreditB, 39 },
+                { Variables.Salary, 41 },
+                { Variables.Flags, 0 }
             }.ToImmutableDictionary();
 
             var aprioreInfo = new Dictionary<string, ImmutableDictionary<string, object>>();
             aprioreInfo["applicant1"] = new Dictionary<string, object>
             {
-                { "Role", "Primary" },
-                { "CreditA", 20.0 },
-                { "CreditB", 29.0 },
-                { "Salary", 10 },
-                { "Age", 50 },
-                { "Deceased", false }
+                { Variables.Role, Roles.Primary },
+                { Variables.CreditA, 20 },
+                { Variables.CreditB, 29 },
+                { Variables.Salary, 10 },
+                { Variables.Age, 50 },
+                { Variables.Deceased, false }
             }.ToImmutableDictionary();
             aprioreInfo["applicant2"] = new Dictionary<string, object>
             {
-                { "Role", "Secondary" },
-                { "Age", 59 },
-                { "Deceased", false }
+                { Variables.Role, Roles.Other },
+                { Variables.Age, 59 },
+                { Variables.Deceased, false }
             }.ToImmutableDictionary();
 
             AddressInfo = addressInfo.ToImmutableDictionary();
@@ -133,7 +134,7 @@ namespace ce_toy_cs
 
         public IImmutableSet<string> RequiredKeys => ImmutableHashSet<string>.Empty;
 
-        public IImmutableSet<string> LoadedKeys => new[] { "Address" }.ToImmutableHashSet();
+        public IImmutableSet<string> LoadedKeys => new[] { Variables.Address.Name }.ToImmutableHashSet();
 
         public ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input)
         {
@@ -152,7 +153,12 @@ namespace ce_toy_cs
         public int Cost => 2;
 
         public IImmutableSet<string> RequiredKeys => ImmutableHashSet<string>.Empty;
-        public IImmutableSet<string> LoadedKeys => new[] { "Salary", "CreditA", "CreditB", "Flags" }.ToImmutableHashSet();
+        public IImmutableSet<string> LoadedKeys => new[] { 
+            Variables.Salary.Name, 
+            Variables.CreditA.Name, 
+            Variables.CreditB.Name, 
+            Variables.Flags.Name 
+        }.ToImmutableHashSet();
 
         public ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input)
         {
@@ -170,20 +176,24 @@ namespace ce_toy_cs
 
         public int Cost => 0;
 
-        public IImmutableSet<string> RequiredKeys => new[] { "CreditA", "CreditB", "Address" }.ToImmutableHashSet();
+        public IImmutableSet<string> RequiredKeys => new[] { 
+            Variables.CreditA.Name, 
+            Variables.CreditB.Name, 
+            Variables.Address.Name 
+        }.ToImmutableHashSet();
 
-        public IImmutableSet<string> LoadedKeys => new[] { "CreditScore" }.ToImmutableHashSet();
+        public IImmutableSet<string> LoadedKeys => new[] { Variables.CreditScore.Name }.ToImmutableHashSet();
 
         public ImmutableDictionary<string, object> Load(string applicantId, string key, ImmutableDictionary<string, object> input)
         {
-            return input.Add("CreditScore", CalculateCreditScore((double)input["CreditA"], (double)input["CreditB"], (string)input["Address"]));
+            return input.Add(Variables.CreditScore, CalculateCreditScore((int)input[Variables.CreditA], (int)input[Variables.CreditB], (Address)input[Variables.Address]));
         }
 
-        private double CalculateCreditScore(double creditA, double creditB, string address)
+        private double CalculateCreditScore(double creditA, double creditB, Address address)
         {
             var result = creditA > 10.0 ? 5.0 : 0.0;
             result += creditB > 2.0 ? 5.0 : 0.0;
-            result += string.IsNullOrEmpty(address) ? 15.0 : 0.0;
+            result += address.IsValid ? 0.0 : 15.0;
             result /= 5.0 + 5.0 + 15.0;
             return result;
         }

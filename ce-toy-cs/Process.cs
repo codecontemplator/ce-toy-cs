@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ce_toy_cs.VariableTypes;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -22,8 +23,8 @@ namespace ce_toy_cs
         {
             return
                (
-                    from creditA in SDsl.GetValue<double>("CreditA")
-                    from creditB in SDsl.GetValue<double>("CreditB")
+                    from creditA in Variables.CreditA.Value
+                    from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
                     where totalCredit > debtLimit
                     select reject
@@ -33,7 +34,7 @@ namespace ce_toy_cs
         private static RuleExprAst MinTotalSalary(int salaryLimit)
         {
             return
-                from salaries in MDsl.GetValues<int>("Salary")
+                from salaries in Variables.Salary.Values
                 where salaries.Sum() < salaryLimit
                 select reject;
         }
@@ -42,10 +43,10 @@ namespace ce_toy_cs
         {
             return
                 (
-                    from role in SDsl.GetValue<string>("Role")
-                    where role == "Primary"
-                    from address in SDsl.GetValue<string>("Address")
-                    where string.IsNullOrEmpty(address)
+                    from role in Variables.Role.Value
+                    where role == Roles.Primary
+                    from address in Variables.Address.Value
+                    where !address.IsValid
                     select reject
                ).Lift();
         }
@@ -54,7 +55,7 @@ namespace ce_toy_cs
         {
             return
                (
-                    from creditScore in SDsl.GetValue<double>("CreditScore")
+                    from creditScore in Variables.CreditScore.Value
                     where creditScore > limit
                     select reject
                ).Lift();
@@ -62,13 +63,13 @@ namespace ce_toy_cs
 
         private static RuleExprAst Policies(int minAge, int maxAge, int maxFlags)
         {
-            SRuleExprAst Policy<T>(string varName, Expression<Func<T,bool>> predicate, string message) =>
-                SDsl.GetValue<T>(varName).Where(predicate).Select(_ => reject).WithLogging(message);
+            SRuleExprAst Policy<T>(Variable<T> variable, Expression<Func<T,bool>> predicate, string message) =>
+                variable.Value.Where(predicate).Select(_ => reject).WithLogging(message);
 
             return
-                Policy<int> ("Age",      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}" ).AndThen(
-                Policy<bool>("Deceased", deceased => deceased,                $"Must be alive"                                           )).AndThen(
-                Policy<int> ("Flags",    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                    )).Lift();
+                Policy(Variables.Age,      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}" ).AndThen(
+                Policy(Variables.Deceased, deceased => deceased,                $"Must be alive"                                           )).AndThen(
+                Policy(Variables.Flags,    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                    )).Lift();
         }
 
         public static Rule GetProcess()
