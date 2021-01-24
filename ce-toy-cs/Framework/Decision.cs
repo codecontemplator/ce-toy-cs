@@ -49,5 +49,27 @@ namespace ce_toy_cs.Framework
         {
             return decisions.Aggregate(Decision.Accept, Min);
         }
+
+        public static int GetGrantedAmount(this (Option<Decision>, MRuleExprContext) result)
+        {
+            if (result.Item1.IsSome(out var decision))
+            {
+                switch (decision.Type)
+                {
+                    case DecisionType.Accept:
+                        return result.Item2.Amount;
+                    case DecisionType.Reject:
+                        return 0;
+                    case DecisionType.AcceptGivenAmount:
+                        return decision.Amount.Value;
+                    default:
+                        throw new Exception("Unknown decision type");
+                }
+            }
+            else
+            {
+                return result.Item2.Amount;
+            }
+        }
     }
 }

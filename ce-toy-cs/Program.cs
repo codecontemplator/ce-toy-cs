@@ -35,7 +35,7 @@ namespace ce_toy_cs
 
             Console.WriteLine($"# Evaluation");
             Console.WriteLine($"Requested amount: {requestedAmount}");
-            Console.WriteLine($"Granted amount: {result.Item1}");
+            Console.WriteLine($"Granted amount: {result.GetGrantedAmount()}");
             foreach (var applicant in result.Item2.Applicants.Values)
                 Console.WriteLine($"{applicant.Id}: a posteriori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();
