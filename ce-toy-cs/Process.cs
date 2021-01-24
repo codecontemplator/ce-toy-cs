@@ -68,9 +68,12 @@ namespace ce_toy_cs
                 variable.Value.Where(predicate).Select(_ => reject).WithLogging(message);
 
             return
-                Policy(Variables.Age,      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}" ).AndThen(
-                Policy(Variables.Deceased, deceased => deceased,                $"Must be alive"                                           )).AndThen(
-                Policy(Variables.Flags,    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                    )).Lift();
+                new []
+                {
+                    Policy(Variables.Age,      age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
+                    Policy(Variables.Deceased, deceased => deceased,                $"Must be alive"                                           ),
+                    Policy(Variables.Flags,    flags => flags >= 2,                 $"Flags must be less than {maxFlags}"                      )
+                }.Join().Lift();
         }
 
         public static Rule GetProcess()
