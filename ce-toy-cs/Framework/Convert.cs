@@ -7,7 +7,7 @@ namespace ce_toy_cs.Framework
 {
     public static class Convert
     {
-        public static Rule CompileToRule(this RuleExprAst<int, MRuleExprContext> expr)
+        public static Rule CompileToRule(this RuleExprAst<Decision, MRuleExprContext> expr)
         {
             return new Rule
             {
@@ -16,7 +16,7 @@ namespace ce_toy_cs.Framework
             };
         }
 
-        public static RuleExprAst<int, MRuleExprContext> ToRuleExprAst(Expression<Func<RuleExprAst<int, MRuleExprContext>>> ruleDefintion)
+        public static RuleExprAst<Decision, MRuleExprContext> ToRuleExprAst(Expression<Func<RuleExprAst<Decision, MRuleExprContext>>> ruleDefintion)
         {
             var ruleName = GetRuleName((MethodCallExpression)ruleDefintion.Body);
             var ruleImplementation = ruleDefintion.Compile()();

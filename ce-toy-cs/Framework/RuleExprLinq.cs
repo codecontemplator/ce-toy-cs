@@ -43,8 +43,8 @@ namespace ce_toy_cs.Framework
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<int>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<int>), "valueOptionAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Decision>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<Decision>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
@@ -81,12 +81,12 @@ namespace ce_toy_cs.Framework
             return new RuleExprAst<T, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<int, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<int, RuleExprContext> expr, RuleExprAst<int, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
+        public static RuleExprAst<Decision, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<Decision, RuleExprContext> expr, RuleExprAst<Decision, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<int>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<int>), "valueOptionAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Decision>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<Decision>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
@@ -97,7 +97,7 @@ namespace ce_toy_cs.Framework
                     Expression.Condition(
                         Expression.AndAlso(
                             Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                            Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(0))),
+                            Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(Decision.Reject))),
                         valueOptionAndContextAVar,
                         Expression.Invoke(
                             exprNext.Expression,
@@ -106,8 +106,10 @@ namespace ce_toy_cs.Framework
                                     contextAVar,
                                     typeof(IRuleExprContext).GetMethod("WithNewAmount"),
                                     Expression.Condition(
-                                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                                        Expression.Field(valueOptionAVar, "value"),
+                                        Expression.AndAlso(
+                                            Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                                            Expression.Equal(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Type"), Expression.Constant(DecisionType.AcceptGivenAmount))),
+                                        Expression.Property(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Amount"), "Value"),
                                         Expression.Property(contextAVar, "Amount")
                                     )
                                 ),
@@ -123,9 +125,9 @@ namespace ce_toy_cs.Framework
                     functionImplementation
                 );
 
-            var function = Expression.Lambda<RuleExpr<int, RuleExprContext>>(functionBody, context);
+            var function = Expression.Lambda<RuleExpr<Decision, RuleExprContext>>(functionBody, context);
 
-            return new RuleExprAst<int, RuleExprContext> { Expression = function };
+            return new RuleExprAst<Decision, RuleExprContext> { Expression = function };
         }
 
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
@@ -382,7 +384,7 @@ namespace ce_toy_cs.Framework
             //   return aborted ? (None, context) : (Just as, context)
         }
 
-        public static RuleExprAst<int, RuleExprContext> Join<RuleExprContext>(this IEnumerable<RuleExprAst<int, RuleExprContext>> ruleExprAsts) where RuleExprContext : IRuleExprContext
+        public static RuleExprAst<Decision, RuleExprContext> Join<RuleExprContext>(this IEnumerable<RuleExprAst<Decision, RuleExprContext>> ruleExprAsts) where RuleExprContext : IRuleExprContext
         {
             var result = ruleExprAsts.First();
             foreach (var next in ruleExprAsts.Skip(1))
@@ -392,9 +394,9 @@ namespace ce_toy_cs.Framework
 
         private const int reject = 0;
 
-        public static RuleExprAst<int, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T,bool>> predicate, string message)
+        public static RuleExprAst<Decision, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T,bool>> predicate, string message)
         {
-            return expr.Where(predicate).Select(_ => reject).WithLogging(message);
+            return expr.Where(predicate).Select(_ => Decision.Reject).WithLogging(message);
         }
     }
 }
