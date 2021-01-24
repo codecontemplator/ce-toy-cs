@@ -45,7 +45,7 @@ namespace ce_toy_cs
             Console.WriteLine(new string('-', 45 + 10 + 10 + 6));
             foreach(var logRow in result.Item2.Log)
             {
-                Console.WriteLine($"{logRow.Message,-45} | { logRow.Amount, 10} | { logRow.Value, 10}");
+                Console.WriteLine($"{logRow.Message,-45} | { logRow.PreContext.Amount, 10} | { logRow.Value, 10}");
             }
         }
 

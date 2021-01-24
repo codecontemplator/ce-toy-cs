@@ -32,10 +32,11 @@ namespace ce_toy_cs.Framework
             return Expression.Invoke(getNoneValue);
         }
 
-        private static Expression CreateLogEntry(Expression messageExpr, Expression amountExpr, Expression valueExpr)
+        private static Expression CreateLogEntry(Expression messageExpr, Expression preContextExpr, Expression postContextExpr, Expression valueExpr)
         {
-            Expression<Func<string, int, object, LogEntry>> createLogEntry = (message, amount, value) => new LogEntry { Message = message, Amount = amount, Value = value };
-            return Expression.Invoke(createLogEntry, messageExpr, amountExpr, valueExpr);
+            Expression<Func<string, IRuleExprContext, IRuleExprContext, object, LogEntry>> createLogEntry = (message, preContext, postContext, value) => 
+                new LogEntry { Message = message, PreContext = preContext, PostContext = postContext, Value = value };
+            return Expression.Invoke(createLogEntry, messageExpr, preContextExpr, postContextExpr, valueExpr);
         }
 
         public static RuleExprAst<T, RuleExprContext> WithLogging<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, string message)
@@ -59,7 +60,8 @@ namespace ce_toy_cs.Framework
                                 typeof(IRuleExprContext).GetMethod("WithLogging"),
                                 CreateLogEntry(
                                     Expression.Constant(message),
-                                    Expression.Property(contextAVar, "Amount"),
+                                    context,
+                                    contextAVar,
                                     Expression.Convert(valueOptionAVar, typeof(object))
                                     )
                             ),

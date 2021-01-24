@@ -16,7 +16,8 @@ namespace ce_toy_cs.Framework
     public record LogEntry
     {
         public string Message { get; init; }
-        public int Amount { get; init; }
+        public IRuleExprContext PreContext { get; init; }
+        public IRuleExprContext PostContext { get; init; }
         public object Value { get; init; }
     }
 
