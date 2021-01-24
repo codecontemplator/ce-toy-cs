@@ -10,8 +10,6 @@ namespace ce_toy_cs
 
     class Process
     {
-        private const int reject = 0;
-
         private static RuleExprAst AbsoluteMaxAmount(int amountLimit)
         {
             return

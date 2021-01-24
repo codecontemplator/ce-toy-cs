@@ -392,8 +392,6 @@ namespace ce_toy_cs.Framework
             return result;
         }
 
-        private const int reject = 0;
-
         public static RuleExprAst<Decision, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T,bool>> predicate, string message)
         {
             return expr.Where(predicate).Select(_ => Decision.Reject).WithLogging(message);
