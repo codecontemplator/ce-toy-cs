@@ -21,29 +21,38 @@ namespace ce_toy_cs.Framework
         public object Value { get; init; }
     }
 
+    public record Credit
+    {
+        public int Amount { get; init; }
+        public decimal? Interest { get; init; }
+    }
+
     public interface IRuleExprContext
     {
-        int Amount { get; }
+        int RequestedAmount { get; }
+        Option<Credit> GrantedCredit { get; }
         ImmutableList<LogEntry> Log { get; }
-        IRuleExprContext WithNewAmount(int amount);
+        IRuleExprContext WithNewCredit(Credit credit);
         IRuleExprContext WithLogging(LogEntry entry);
     }
 
     public record MRuleExprContext : IRuleExprContext
     {
-        public int Amount { get; init; }
+        public int RequestedAmount { get; init; }
+        public Option<Credit> GrantedCredit { get; init; }
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
-        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithNewCredit(Credit credit) => this with { GrantedCredit = Option<Credit>.Some(credit) };
         public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
     public record SRuleExprContext : IRuleExprContext
     {
-        public int Amount { get; init; }
+        public int RequestedAmount { get; init; }
+        public Option<Credit> GrantedCredit { get; init; }
         public Applicant Applicant { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
-        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public IRuleExprContext WithNewCredit(Credit credit) => this with { GrantedCredit = Option<Credit>.Some(credit) };
         public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 

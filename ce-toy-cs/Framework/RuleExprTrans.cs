@@ -8,7 +8,7 @@ namespace ce_toy_cs.Framework
 {
     static class VotingMethods
     {
-        public static Decision SelectMin(IEnumerable<(Applicant, Decision)> arg)
+        public static T SelectMin<T>(IEnumerable<(Applicant, T)> arg)
         {
             var decisions = arg.Select(x => x.Item2).ToList();
             return decisions.Min();
@@ -17,43 +17,59 @@ namespace ce_toy_cs.Framework
 
     static class RuleExprTrans
     {
-        public static RuleExprAst<Decision, MRuleExprContext> Lift(this RuleExprAst<Decision, SRuleExprContext> sRuleExprAst)
+        public static RuleExprAst<Credit, MRuleExprContext> LiftAmountRule(this RuleExprAst<int, MRuleExprContext> ruleExprAst)
+        {
+            return
+                from amount in ruleExprAst
+                from credit in MDsl.GetCredit()
+                select credit with { Amount = amount };
+        }
+
+        public static RuleExprAst<Credit, MRuleExprContext> LiftAmountRule(this RuleExprAst<DecisionType, MRuleExprContext> ruleExprAst)
+        {
+            return
+                from amount in ruleExprAst
+                from credit in MDsl.GetCredit()
+                select credit with { Amount = amount };
+        }
+
+        public static RuleExprAst<T, MRuleExprContext> Lift<T>(this RuleExprAst<T, SRuleExprContext> sRuleExprAst)
         {
             return sRuleExprAst.Lift(VotingMethods.SelectMin);
         }
 
-        public static RuleExprAst<Decision, MRuleExprContext> Lift(this RuleExprAst<Decision, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, Decision)>, Decision> vote)
+        public static RuleExprAst<T, MRuleExprContext> Lift<T>(this RuleExprAst<T, SRuleExprContext> sRuleExprAst, Func<IEnumerable<(Applicant, T)>, T> vote, T defaultValue = default(T))
         {
             var sRule = sRuleExprAst.Compile();
             var sKeys = sRuleExprAst.GetKeys();
             return
-                from evalResult in MEval(sRule, sKeys)
+                from evalResult in MEval(sRule, sKeys, defaultValue)
                 select vote(evalResult);
         }
 
-        private static RuleExprAst<IEnumerable<(Applicant, Decision)>, MRuleExprContext> MEval(RuleExpr<Decision, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<IEnumerable<(Applicant, T)>, MRuleExprContext> MEval<T>(RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys, T defaultValue)
         {
             return
                 from applicants in MDsl.GetApplicants()
-                from amountApplicantPairs in from applicant in applicants.Values select SEval(applicant, sRule, sKeys)
+                from amountApplicantPairs in from applicant in applicants.Values select SEval(applicant, sRule, sKeys, defaultValue)
                 select amountApplicantPairs;
         }
 
-        private static RuleExprAst<(Applicant, Decision), MRuleExprContext> SEval(Applicant applicant, RuleExpr<Decision, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<(Applicant, T), MRuleExprContext> SEval<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys, T defaultValue)
         {
-            return new RuleExprAst<(Applicant, Decision), MRuleExprContext>
+            return new RuleExprAst<(Applicant, T), MRuleExprContext>
             {
-                Expression = mcontext => SEvalImpl(applicant, sRule)(mcontext)
+                Expression = mcontext => SEvalImpl(applicant, sRule, defaultValue)(mcontext)
             };
         }
 
-        private static RuleExpr<(Applicant, Decision), MRuleExprContext> SEvalImpl(Applicant applicant, RuleExpr<Decision, SRuleExprContext> sRule)
+        private static RuleExpr<(Applicant, T), MRuleExprContext> SEvalImpl<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule, T defaultValue)
         {
             return mcontext =>
             {
-                var (newAmountOption, newSContext) = sRule(new SRuleExprContext
+                var (newValueOption, newSContext) = sRule(new SRuleExprContext
                 {
-                    Amount = mcontext.Amount,
+                    RequestedAmount = mcontext.RequestedAmount,
                     Applicant = applicant,
                     Log = ImmutableList<LogEntry>.Empty,
                 });
@@ -64,13 +80,13 @@ namespace ce_toy_cs.Framework
                     Log = mcontext.Log.AddRange(newSContext.Log)
                 };
 
-                if (newAmountOption.IsSome(out var decision))
+                if (newValueOption.IsSome(out var value))
                 {
-                    return (Option<(Applicant, Decision)>.Some((applicant, decision)), newMContext);  // Rule applied to applicant and gave a result
+                    return (Option<(Applicant, T)>.Some((applicant, value)), newMContext);  // Rule applied to applicant and gave a result
                 }
                 else
                 {
-                    return (Option<(Applicant, Decision)>.Some((applicant, Decision.Accept)), newMContext);  // Rule did not apply to applicant => accept
+                    return (Option<(Applicant, T)>.Some((applicant, defaultValue)), newMContext);  // Rule did not apply to applicant => use default
                 }
             };
         }

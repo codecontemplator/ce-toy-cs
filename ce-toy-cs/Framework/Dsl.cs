@@ -8,6 +8,11 @@ namespace ce_toy_cs.Framework
 {
     static class SDsl
     {
+        public static RuleExprAst<Credit, SRuleExprContext> GetCredit()
+        {
+            throw new NotImplementedException();
+        }
+
         public static RuleExprAst<int, SRuleExprContext> GetAmount()
         {
             return
@@ -59,6 +64,11 @@ namespace ce_toy_cs.Framework
 
     static class MDsl
     {
+        public static RuleExprAst<Credit, MRuleExprContext> GetCredit()
+        {
+            throw new NotImplementedException();
+        }
+
         public static RuleExprAst<int, MRuleExprContext> GetAmount()
         {
             return

@@ -6,15 +6,17 @@ using System.Linq;
 namespace ce_toy_cs
 {
     using Convert = Framework.Convert;
-    using RuleExprAst = RuleExprAst<Decision, MRuleExprContext>;
+    using RuleExprAst = RuleExprAst<Credit, MRuleExprContext>;
 
     class Process
     {
         private static RuleExprAst AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in MDsl.GetAmount()
-                select Decision.AcceptLoweredAmount(Math.Min(amount, amountLimit));
+                (
+                    from amount in MDsl.GetAmount()
+                    select Math.Min(amount, amountLimit)
+                ).LiftAmountRule();
         }
 
         private static RuleExprAst MaxTotalDebt(double debtLimit)
@@ -25,8 +27,8 @@ namespace ce_toy_cs
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
                     where totalCredit > debtLimit
-                    select Decision.Reject
-               ).Lift();
+                    select DecisionType.Reject
+               ).LiftDecisionType();
         }
 
         private static RuleExprAst MinTotalSalary(int salaryLimit)
@@ -34,7 +36,7 @@ namespace ce_toy_cs
             return
                 from salaries in Variables.Salary.Values
                 where salaries.Sum() < salaryLimit
-                select Decision.Reject;
+                select DecisionType.Reject;
         }
 
         private static RuleExprAst PrimaryApplicantMustHaveAddress()
