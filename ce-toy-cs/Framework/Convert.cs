@@ -66,7 +66,7 @@ namespace ce_toy_cs.Framework
     public static class Return
     {
         public static IRuleExprContextApplicable Amount(int value) => new Amount(value);
-        public static IRuleExprContextApplicable Accept() => Unit.Value;
+        //public static IRuleExprContextApplicable Accept() => Unit.Value;
         public static IRuleExprContextApplicable Reject() => Framework.Reject.Value;
     }
 }

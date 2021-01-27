@@ -75,16 +75,17 @@ namespace ce_toy_cs
 
         public static Rule GetProcess()
         {
-            return
-                new[]
-                {
-                    Convert.ToRuleExprAst(() => AbsoluteMaxAmount(100)),
-                    Convert.ToRuleExprAst(() => Policies(18, 100, 2)),
-                    Convert.ToRuleExprAst(() => MaxTotalDebt(50)),
-                    Convert.ToRuleExprAst(() => MinTotalSalary(50)),
-                    Convert.ToRuleExprAst(() => PrimaryApplicantMustHaveAddress()),
-                    Convert.ToRuleExprAst(() => CreditScoreUnderLimit(0.8))
-                }.JoinMany().CompileToRule();
+            throw new NotImplementedException();
+            //return
+            //    new[]
+            //    {
+            //        Convert.ToRuleExprAst(() => AbsoluteMaxAmount(100)),
+            //        Convert.ToRuleExprAst(() => Policies(18, 100, 2)),
+            //        Convert.ToRuleExprAst(() => MaxTotalDebt(50)),
+            //        Convert.ToRuleExprAst(() => MinTotalSalary(50)),
+            //        Convert.ToRuleExprAst(() => PrimaryApplicantMustHaveAddress()),
+            //        Convert.ToRuleExprAst(() => CreditScoreUnderLimit(0.8))
+            //    }.JoinMany().CompileToRule();
         }
     }
 }

@@ -28,10 +28,10 @@ namespace ce_toy_cs.Framework
             var sKeys = sRuleExprAst.GetKeys();
             return
                 from evalResult in MEval(sRule, sKeys)
-                select vote(evalResult);
+                select vote(evalResult.Where(x => x.Item2.isSome).Select(x => new Tuple<Applicant,T>(x.Item1, x.Item2.value).ToValueTuple()));
         }
 
-        private static RuleExprAst<IEnumerable<(Applicant, T)>, MRuleExprContext> MEval<T>(RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<IEnumerable<(Applicant, Option<T>)>, MRuleExprContext> MEval<T>(RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
             return
                 from applicants in MDsl.GetApplicants()
@@ -39,15 +39,15 @@ namespace ce_toy_cs.Framework
                 select amountApplicantPairs;
         }
 
-        private static RuleExprAst<(Applicant, T), MRuleExprContext> SEval<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys)
+        private static RuleExprAst<(Applicant, Option<T>), MRuleExprContext> SEval<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule, IEnumerable<string> sKeys)
         {
-            return new RuleExprAst<(Applicant, T), MRuleExprContext>
+            return new RuleExprAst<(Applicant, Option<T>), MRuleExprContext>
             {
                 Expression = mcontext => SEvalImpl(applicant, sRule)(mcontext)
             };
         }
 
-        private static RuleExpr<(Applicant, T), MRuleExprContext> SEvalImpl<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule)
+        private static RuleExpr<(Applicant, Option<T>), MRuleExprContext> SEvalImpl<T>(Applicant applicant, RuleExpr<T, SRuleExprContext> sRule)
         {
             return mcontext =>
             {
@@ -64,14 +64,16 @@ namespace ce_toy_cs.Framework
                     Log = mcontext.Log.AddRange(newSContext.Log)
                 };
 
-                if (newAmountOption.IsSome(out var decision))
-                {
-                    return (Option<(Applicant, T)>.Some((applicant, decision)), newMContext);  // Rule applied to applicant and gave a result
-                }
-                else
-                {
-                    return (Option<(Applicant, T)>.Some((applicant, Unit.Value)), newMContext);  // Rule did not apply to applicant => accept
-                }
+                return (Option<(Applicant, Option<T>)>.Some((applicant, newAmountOption)), newMContext);
+
+                //if (newAmountOption.IsSome(out var decision))
+                //{
+                //    return (Option<(Applicant, Option<T>)>.Some((applicant, decision)), newMContext);  // Rule applied to applicant and gave a result
+                //}
+                //else
+                //{
+                //    return (Option<(Applicant, T)>.Some((applicant, defaultValue)), newMContext);  // Rule did not apply to applicant => accept
+                //}
             };
         }
     }

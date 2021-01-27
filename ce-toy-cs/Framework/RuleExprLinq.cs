@@ -407,12 +407,7 @@ namespace ce_toy_cs.Framework
 
         public static RuleExprAst<IRuleExprContextApplicable, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T,bool> predicate, string message)
         {
-            return expr.Where(x => !predicate(x)).Select(_ => Return.Accept()).WithLogging(message);
-        }
-
-        public static RuleExprAst<IRuleExprContextApplicable, RuleExprContext> AcceptIf<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T, bool> predicate, string message)
-        {
-            return expr.Where(x => predicate(x)).Select(_ => Return.Accept()).WithLogging(message);
+            return expr.Where(x => predicate(x)).Select(_ => Return.Reject()).WithLogging(message);
         }
     }
 }
