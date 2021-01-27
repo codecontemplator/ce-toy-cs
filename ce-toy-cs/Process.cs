@@ -27,8 +27,8 @@ namespace ce_toy_cs
                     from creditA in Variables.CreditA.Value
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
-                    where totalCredit < debtLimit
-                    select Accept()
+                    where totalCredit > debtLimit
+                    select Reject()
                ).Lift();
         }
 
@@ -36,36 +36,36 @@ namespace ce_toy_cs
         {
             return
                 from salaries in Variables.Salary.Values
-                where salaries.Sum() > salaryLimit
-                select Accept();
+                where salaries.Sum() < salaryLimit
+                select Reject();
         }
 
-        //private static RuleExprAst PrimaryApplicantMustHaveAddress()
-        //{
-        //    return
-        //        (
-        //            from role in Variables.Role.Value
-        //            where role == Roles.Primary
-        //            from address in Variables.Address.Value
-        //            where !address.IsValid
-        //            select Decision.Reject
-        //       ).Lift();
-        //}
+        private static RuleExprAst PrimaryApplicantMustHaveAddress()
+        {
+            return
+                (
+                    from role in Variables.Role.Value
+                    where role == Roles.Primary
+                    from address in Variables.Address.Value
+                    where !address.IsValid
+                    select Reject()
+               ).Lift();
+        }
 
         private static RuleExprAst CreditScoreUnderLimit(double limit)
         {
             return
                (
                     from creditScore in Variables.CreditScore.Value
-                    where creditScore < limit
-                    select Accept()
+                    where creditScore > limit
+                    select Reject()
                ).Lift();
         }
 
         private static RuleExprAst<Unit, MRuleExprContext> Policies(int minAge, int maxAge, int maxFlags)
         {
             return
-                new RuleExprAst<IRuleExprContextApplicable, SRuleExprContext>[]
+                new []
                 {
                     Variables.Age.Value.RejectIf(age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
                     Variables.Deceased.Value.RejectIf(deceased => deceased, $"Must be alive"),

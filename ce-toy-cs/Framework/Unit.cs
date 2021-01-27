@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ce_toy_cs.Framework
+﻿namespace ce_toy_cs.Framework
 {
     public class Unit : IRuleExprContextApplicable
     {
@@ -15,14 +9,39 @@ namespace ce_toy_cs.Framework
 
         public static Unit Value { get; } = new Unit();
 
-        public IRuleExprContext ApplyTo(IRuleExprContext ctx)
+        public (Option<Unit>, IRuleExprContext) ApplyTo(IRuleExprContext ctx)
         {
-            return ctx;
+            return (Option<Unit>.Some(this), ctx);
         }
 
         public override bool Equals(object obj)
         {
-            return true;
+            return obj is Unit;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+    }
+
+    public class Reject : IRuleExprContextApplicable
+    {
+        private Reject()
+        {
+
+        }
+
+        public static Reject Value { get; } = new Reject();
+
+        public (Option<Unit>, IRuleExprContext) ApplyTo(IRuleExprContext ctx)
+        {
+            return (Option<Unit>.None, ctx);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Reject;
         }
 
         public override int GetHashCode()

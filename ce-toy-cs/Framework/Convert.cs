@@ -57,9 +57,9 @@ namespace ce_toy_cs.Framework
             Value = amount;
         }
 
-        public IRuleExprContext ApplyTo(IRuleExprContext ctx)
+        public (Option<Unit>,IRuleExprContext) ApplyTo(IRuleExprContext ctx)
         {
-            return ctx.WithNewAmount(this.Value);
+            return (Option<Unit>.Some(Unit.Value), ctx.WithNewAmount(Value));
         }
     }
 
@@ -67,5 +67,6 @@ namespace ce_toy_cs.Framework
     {
         public static IRuleExprContextApplicable Amount(int value) => new Amount(value);
         public static IRuleExprContextApplicable Accept() => Unit.Value;
+        public static IRuleExprContextApplicable Reject() => Framework.Reject.Value;
     }
 }

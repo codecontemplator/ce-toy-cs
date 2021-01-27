@@ -32,7 +32,7 @@ namespace ce_toy_cs.Framework
 
     public interface IRuleExprContextApplicable
     {
-        IRuleExprContext ApplyTo(IRuleExprContext ctx);
+        (Option<Unit>, IRuleExprContext) ApplyTo(IRuleExprContext ctx);
     }
 
     public record MRuleExprContext : IRuleExprContext
