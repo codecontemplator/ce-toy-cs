@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace ce_toy_cs.Framework
 {
+    /*
     public enum DecisionType
     {
         Accept, Reject, AcceptLoweredAmount
@@ -72,4 +73,5 @@ namespace ce_toy_cs.Framework
             }
         }
     }
+    */
 }

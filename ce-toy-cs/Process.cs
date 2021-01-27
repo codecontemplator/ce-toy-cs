@@ -1,12 +1,15 @@
 ﻿using ce_toy_cs.Framework;
+using ce_toy_cs.Framework.Details;
 using ce_toy_cs.VariableTypes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ce_toy_cs
 {
-    using Convert = Framework.Convert;
-    using RuleExprAst = RuleExprAst<Decision, MRuleExprContext>;
+    //using Convert = Framework.Convert;
+    using RuleExprAst = RuleExprAst<IRuleExprContextApplicable, MRuleExprContext>;
+    using static Return;
 
     class Process
     {
@@ -14,7 +17,7 @@ namespace ce_toy_cs
         {
             return
                 from amount in MDsl.GetAmount()
-                select Decision.AcceptLoweredAmount(Math.Min(amount, amountLimit));
+                select Amount(Math.Min(amount, amountLimit));
         }
 
         private static RuleExprAst MaxTotalDebt(double debtLimit)
@@ -24,8 +27,8 @@ namespace ce_toy_cs
                     from creditA in Variables.CreditA.Value
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
-                    where totalCredit > debtLimit
-                    select Decision.Reject
+                    where totalCredit < debtLimit
+                    select Accept()
                ).Lift();
         }
 
@@ -33,41 +36,41 @@ namespace ce_toy_cs
         {
             return
                 from salaries in Variables.Salary.Values
-                where salaries.Sum() < salaryLimit
-                select Decision.Reject;
+                where salaries.Sum() > salaryLimit
+                select Accept();
         }
 
-        private static RuleExprAst PrimaryApplicantMustHaveAddress()
-        {
-            return
-                (
-                    from role in Variables.Role.Value
-                    where role == Roles.Primary
-                    from address in Variables.Address.Value
-                    where !address.IsValid
-                    select Decision.Reject
-               ).Lift();
-        }
+        //private static RuleExprAst PrimaryApplicantMustHaveAddress()
+        //{
+        //    return
+        //        (
+        //            from role in Variables.Role.Value
+        //            where role == Roles.Primary
+        //            from address in Variables.Address.Value
+        //            where !address.IsValid
+        //            select Decision.Reject
+        //       ).Lift();
+        //}
 
         private static RuleExprAst CreditScoreUnderLimit(double limit)
         {
             return
                (
                     from creditScore in Variables.CreditScore.Value
-                    where creditScore > limit
-                    select Decision.Reject
+                    where creditScore < limit
+                    select Accept()
                ).Lift();
         }
 
-        private static RuleExprAst Policies(int minAge, int maxAge, int maxFlags)
+        private static RuleExprAst<Unit, MRuleExprContext> Policies(int minAge, int maxAge, int maxFlags)
         {
             return
-                new []
+                new RuleExprAst<IRuleExprContextApplicable, SRuleExprContext>[]
                 {
-                    Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
-                    Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
-                    Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-                }.Join().Lift();
+                    Variables.Age.Value.RejectIf(age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
+                    Variables.Deceased.Value.RejectIf(deceased => deceased, $"Must be alive"),
+                    Variables.Flags.Value.RejectIf(flags => flags >= 2, $"Flags must be less than {maxFlags}")
+                }.JoinMany().Lift();
         }
 
         public static Rule GetProcess()
@@ -81,7 +84,7 @@ namespace ce_toy_cs
                     Convert.ToRuleExprAst(() => MinTotalSalary(50)),
                     Convert.ToRuleExprAst(() => PrimaryApplicantMustHaveAddress()),
                     Convert.ToRuleExprAst(() => CreditScoreUnderLimit(0.8))
-                }.Join().CompileToRule();
+                }.JoinMany().CompileToRule();
         }
     }
 }

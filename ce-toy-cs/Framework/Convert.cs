@@ -5,6 +5,7 @@ using System.Text;
 
 namespace ce_toy_cs.Framework
 {
+    /*
     public static class Convert
     {
         public static Rule CompileToRule(this RuleExprAst<Decision, MRuleExprContext> expr)
@@ -44,5 +45,27 @@ namespace ce_toy_cs.Framework
             sb.Append(")");
             return sb.ToString();
         }
+    }
+    */
+
+    public record Amount : IRuleExprContextApplicable
+    {
+        public int Value { get; }
+
+        public Amount(int amount)
+        {
+            Value = amount;
+        }
+
+        public IRuleExprContext ApplyTo(IRuleExprContext ctx)
+        {
+            return ctx.WithNewAmount(this.Value);
+        }
+    }
+
+    public static class Return
+    {
+        public static IRuleExprContextApplicable Amount(int value) => new Amount(value);
+        public static IRuleExprContextApplicable Accept() => Unit.Value;
     }
 }

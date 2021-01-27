@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq.Expressions;
 
@@ -27,6 +28,11 @@ namespace ce_toy_cs.Framework
         ImmutableList<LogEntry> Log { get; }
         IRuleExprContext WithNewAmount(int amount);
         IRuleExprContext WithLogging(LogEntry entry);
+    }
+
+    public interface IRuleExprContextApplicable
+    {
+        IRuleExprContext ApplyTo(IRuleExprContext ctx);
     }
 
     public record MRuleExprContext : IRuleExprContext

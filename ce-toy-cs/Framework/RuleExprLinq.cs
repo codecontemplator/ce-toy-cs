@@ -43,8 +43,8 @@ namespace ce_toy_cs.Framework
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Decision>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<Decision>), "valueOptionAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
@@ -81,54 +81,75 @@ namespace ce_toy_cs.Framework
             return new RuleExprAst<T, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<Decision, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<Decision, RuleExprContext> expr, RuleExprAst<Decision, RuleExprContext> exprNext) where RuleExprContext : IRuleExprContext
+
+        public static RuleExprAst<Unit, RuleExprContext> Apply<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr) 
+            where RuleExprContext : IRuleExprContext
+            where T : IRuleExprContextApplicable
         {
-            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+            throw new NotImplementedException();
+            //var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Decision>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<Decision>), "valueOptionAVar");
-            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            //var valueOptionAndContextAVar = Expression.Variable(typeof((Option<IRuleExprContextApplicable>, RuleExprContext)), "valueOptionAndContextAVar");
+            //var valueOptionAVar = Expression.Variable(typeof(Option<IRuleExprContextApplicable>), "valueOptionAVar");
+            //var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
-            var functionImplementation =
-                Expression.Block(
-                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
-                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
-                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
-                    Expression.Condition(
-                        Expression.AndAlso(
-                            Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                            Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(Decision.Reject))),
-                        valueOptionAndContextAVar,
-                        Expression.Invoke(
-                            exprNext.Expression,
-                            Expression.Convert(
-                                Expression.Call(
-                                    contextAVar,
-                                    typeof(IRuleExprContext).GetMethod("WithNewAmount"),
-                                    Expression.Condition(
-                                        Expression.AndAlso(
-                                            Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                                            Expression.Equal(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Type"), Expression.Constant(DecisionType.AcceptLoweredAmount))),
-                                        Expression.Property(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Amount"), "Value"),
-                                        Expression.Property(contextAVar, "Amount")
-                                    )
-                                ),
-                                typeof(RuleExprContext)
-                            )
-                        )
-                    )
-                );
+            //var functionImplementation =
+            //    Expression.Block(
+            //        Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
+            //        Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
+            //        Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
+            //        Expression.Condition(
+            //            Expression.AndAlso(
+            //                Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+            //                Expression.Equal(Expression.Field(valueOptionAVar, "value"), Expression.Constant(Decision.Reject))),
+            //            valueOptionAndContextAVar,
+            //            Expression.Invoke(
+            //                exprNext.Expression,
+            //                Expression.Convert(
+            //                    Expression.Call(
+            //                        contextAVar,
+            //                        typeof(IRuleExprContext).GetMethod("WithNewAmount"),
+            //                        Expression.Condition(
+            //                            Expression.AndAlso(
+            //                                Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+            //                                Expression.Equal(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Type"), Expression.Constant(DecisionType.AcceptLoweredAmount))),
+            //                            Expression.Property(Expression.Property(Expression.Field(valueOptionAVar, "value"), "Amount"), "Value"),
+            //                            Expression.Property(contextAVar, "Amount")
+            //                        )
+            //                    ),
+            //                    typeof(RuleExprContext)
+            //                )
+            //            )
+            //        )
+            //    );
 
-            var functionBody =
-                Expression.Block(
-                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
-                    functionImplementation
-                );
+            //var functionBody =
+            //    Expression.Block(
+            //        new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
+            //        functionImplementation
+            //    );
 
-            var function = Expression.Lambda<RuleExpr<Decision, RuleExprContext>>(functionBody, context);
+            //var function = Expression.Lambda<RuleExpr<Decision, RuleExprContext>>(functionBody, context);
 
-            return new RuleExprAst<Decision, RuleExprContext> { Expression = function };
+            //return new RuleExprAst<Decision, RuleExprContext> { Expression = function };
         }
+
+        public static RuleExprAst<TB, RuleExprContext> Join<RuleExprContext, TA, TB>(this RuleExprAst<TA, RuleExprContext> expr, RuleExprAst<TB, RuleExprContext> exprNext) 
+            where RuleExprContext : IRuleExprContext
+            where TA : IRuleExprContextApplicable
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RuleExprAst<Unit, RuleExprContext> JoinMany<RuleExprContext>(this IEnumerable<RuleExprAst<IRuleExprContextApplicable, RuleExprContext>> ruleExprAsts) 
+            where RuleExprContext : IRuleExprContext
+        {
+            var result = ruleExprAsts.First();
+            foreach (var next in ruleExprAsts.Skip(1))
+                result = result.Join(next);
+            return Apply(result);
+        }
+
 
         public static RuleExprAst<U, RuleExprContext> Select<T, U, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T, U>> convert)
         {
@@ -384,17 +405,14 @@ namespace ce_toy_cs.Framework
             //   return aborted ? (None, context) : (Just as, context)
         }
 
-        public static RuleExprAst<Decision, RuleExprContext> Join<RuleExprContext>(this IEnumerable<RuleExprAst<Decision, RuleExprContext>> ruleExprAsts) where RuleExprContext : IRuleExprContext
+        public static RuleExprAst<IRuleExprContextApplicable, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T,bool> predicate, string message)
         {
-            var result = ruleExprAsts.First();
-            foreach (var next in ruleExprAsts.Skip(1))
-                result = result.Join(next);
-            return result;
+            return expr.Where(x => !predicate(x)).Select(_ => Return.Accept()).WithLogging(message);
         }
 
-        public static RuleExprAst<Decision, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T,bool>> predicate, string message)
+        public static RuleExprAst<IRuleExprContextApplicable, RuleExprContext> AcceptIf<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T, bool> predicate, string message)
         {
-            return expr.Where(predicate).Select(_ => Decision.Reject).WithLogging(message);
+            return expr.Where(x => predicate(x)).Select(_ => Return.Accept()).WithLogging(message);
         }
     }
 }
