@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ce_toy_cs.Framework.Functional;
+using System.Collections.Generic;
 
 namespace ce_toy_cs.Framework
 {
@@ -11,7 +12,7 @@ namespace ce_toy_cs.Framework
     {
         public abstract string Name { get; }
         public static implicit operator string(Variable<T> v) => v.Name;
-        public RuleExprAst<T, SRuleExprContext> Value => SDsl.GetValue<T>(Name);
-        public RuleExprAst<IEnumerable<T>, MRuleExprContext> Values => MDsl.GetValues<T>(Name);
+        public RuleExprAst<T, RuleExprContext<string>> Value => Dsl.GetValue<T>(Name);
+        public RuleExprAst<IEnumerable<T>, RuleExprContext<Unit>> Values => Dsl.GetValues<T>(Name);
     }
 }

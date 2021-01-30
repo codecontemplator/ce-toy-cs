@@ -1,37 +1,35 @@
-﻿using ce_toy_cs;
+﻿using ce_toy_cs.Framework.Functional;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace ce_toy_cs.Framework
 {
-    static class SDsl
+    static class Dsl
     {
-        public static RuleExprAst<int, SRuleExprContext> GetAmount()
+        public static RuleExprAst<int, RuleExprContext<Selector>> GetAmount<Selector>()
         {
             return
-                new RuleExprAst<int, SRuleExprContext>
+                new RuleExprAst<int, RuleExprContext<Selector>>
                 {
-                    Expression = context => new Tuple<Option<int>, SRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple()
+                    Expression = context => new Tuple<Option<int>, RuleExprContext<Selector>>(Option<int>.Some(context.Amount), context).ToValueTuple()
                 };
         }
 
-        public static RuleExprAst<T, SRuleExprContext> GetValue<T>(string key)
+        public static RuleExprAst<T, RuleExprContext<string>> GetValue<T>(string key)
         {
             return
-                new RuleExprAst<T, SRuleExprContext>
+                new RuleExprAst<T, RuleExprContext<string>>
                 {
                     Expression = context => GetValueImpl<T>(key)(context)
                 };
         }
 
-        private static RuleExpr<T, SRuleExprContext> GetValueImpl<T>(string key)
+        private static RuleExpr<T, RuleExprContext<string>> GetValueImpl<T>(string key)
         {
-
             return context =>
             {
-                var applicant = context.Applicant;
+                var applicant = context.Applicants[context.Selector];
                 if (applicant.KeyValueMap.TryGetValue(key, out var value))
                 {
                     if (!(value is T))
@@ -45,89 +43,42 @@ namespace ce_toy_cs.Framework
 
                 var newContext = context with
                 {
-                    Applicant = applicant with
-                    {
-                        Loaders = applicant.Loaders.Skip(1),
-                        KeyValueMap = applicant.Loaders.First().Load(applicant.Id, key, applicant.KeyValueMap)
-                    }
-                };
-
-                return GetValueImpl<T>(key)(newContext);
-            };
-        }
-    }
-
-    static class MDsl
-    {
-        public static RuleExprAst<int, MRuleExprContext> GetAmount()
-        {
-            return
-                new RuleExprAst<int, MRuleExprContext>
-                {
-                    Expression = context => new Tuple<Option<int>, MRuleExprContext>(Option<int>.Some(context.Amount), context).ToValueTuple()
-                };
-        }
-
-        public static RuleExprAst<IEnumerable<T>, MRuleExprContext> GetValues<T>(string key)
-        {
-            return GetValues<T>(key, x => true);
-        }
-
-        public static RuleExprAst<IEnumerable<T>, MRuleExprContext> GetValues<T>(string key, Predicate<Applicant> predicate)
-        {
-            return
-                from applicants in GetApplicants()
-                from values in from applicantId in applicants.Keys where predicate(applicants[applicantId]) select GetValue<T>(applicantId, key)
-                select values;
-        }
-
-        private static RuleExprAst<T, MRuleExprContext> GetValue<T>(string applicantId, string key)
-        {
-            return
-                new RuleExprAst<T, MRuleExprContext>
-                {
-                    Expression = context => GetValueImpl<T>(applicantId, key)(context)
-                };
-        }
-
-        public static RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext> GetApplicants()
-        {
-            return
-                new RuleExprAst<ImmutableDictionary<string, Applicant>, MRuleExprContext>
-                {
-                    Expression = context => new Tuple<Option<ImmutableDictionary<string, Applicant>>, MRuleExprContext>(Option<ImmutableDictionary<string, Applicant>>.Some(context.Applicants), context).ToValueTuple()
-                };
-        }
-
-        private static RuleExpr<T, MRuleExprContext> GetValueImpl<T>(string applicantId, string key)
-        {
-
-            return context =>
-            {
-                if (!context.Applicants.TryGetValue(applicantId, out var applicant))
-                    throw new Exception($"Applicant {applicantId} not found");
-
-                if (applicant.KeyValueMap.TryGetValue(key, out var value))
-                {
-                    if (!(value is T))
-                        throw new Exception($"Failed to retrieve value for key {key} for applicant {applicantId} due to type mismatch. Got {value.GetType().Name}, expected {typeof(T).Name}");
-
-                    return (Option<T>.Some((T)value), context);
-                }
-
-                if (!applicant.Loaders.Any())
-                    throw new Exception($"Failed to load value for key {key} for applicant {applicantId}");
-
-                var newContext = context with
-                {
-                    Applicants = context.Applicants.SetItem(applicantId, applicant with
+                    Applicants = context.Applicants.SetItem(context.Selector, applicant with
                     {
                         Loaders = applicant.Loaders.Skip(1),
                         KeyValueMap = applicant.Loaders.First().Load(applicant.Id, key, applicant.KeyValueMap)
                     })
                 };
 
-                return GetValueImpl<T>(applicantId, key)(newContext);
+                return GetValueImpl<T>(key)(newContext);
+            };
+        }
+
+        public static RuleExprAst<IEnumerable<T>, RuleExprContext<Unit>> GetValues<T>(string key)
+        {
+            return
+                new RuleExprAst<IEnumerable<T>, RuleExprContext<Unit>>
+                {
+                    Expression = context => GetValuesImpl<T>(key)(context)
+                };
+        }
+
+        private static RuleExpr<IEnumerable<T>, RuleExprContext<Unit>> GetValuesImpl<T>(string key)
+        {
+            return context =>
+            {
+                var result = new List<T>();
+                var scontext = context.WithSelector<string>(null);
+                foreach (var applicantId in context.Applicants.Keys)
+                {
+                    scontext = scontext.WithSelector(applicantId);
+                    var (maybeValue, newSContext) = GetValueImpl<T>(key)(scontext);
+                    if (!maybeValue.IsSome(out var value))
+                        throw new Exception("Internal error. GetValue should never return nothing (it should throw instead).");
+                    result.Add(value);
+                }
+
+                return (Option<IEnumerable<T>>.Some(result), scontext.WithSelector(Unit.Value));
             };
         }
     }

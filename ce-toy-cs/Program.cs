@@ -1,4 +1,5 @@
 ﻿using ce_toy_cs.Framework;
+using ce_toy_cs.Framework.Functional;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace ce_toy_cs
             Console.WriteLine();
 
             var requestedAmount = 170;
-            var result = process.RuleExpr(new MRuleExprContext
+            var result = process.RuleExpr(new RuleExprContext<Unit>
             {
                 Log = ImmutableList<LogEntry>.Empty,
                 Amount = requestedAmount,
@@ -35,7 +36,7 @@ namespace ce_toy_cs
 
             Console.WriteLine($"# Evaluation");
             Console.WriteLine($"Requested amount: {requestedAmount}");
-            Console.WriteLine($"Granted amount: {result.GetGrantedAmount()}");
+            Console.WriteLine($"Granted amount: {(result.Item1.isSome ? result.Item2.Amount : 0)}");
             foreach (var applicant in result.Item2.Applicants.Values)
                 Console.WriteLine($"{applicant.Id}: a posteriori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();

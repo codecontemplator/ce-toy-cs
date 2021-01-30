@@ -1,43 +1,44 @@
 ﻿using ce_toy_cs.Framework;
+using ce_toy_cs.Framework.Functional;
 using ce_toy_cs.VariableTypes;
 using System;
 using System.Linq;
 
 namespace ce_toy_cs
 {
-    using Convert = Framework.Convert;
-    using RuleExprAst = RuleExprAst<Decision, MRuleExprContext>;
+    //using RuleExprAst = RuleExprAst<Decision, MRuleExprContext>;
+    using static VoteMethods;
 
     class Process
     {
-        private static RuleExprAst AbsoluteMaxAmount(int amountLimit)
+        private static RuleExprAst<Result, RuleExprContext<Unit>> AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in MDsl.GetAmount()
-                select Decision.AcceptLoweredAmount(Math.Min(amount, amountLimit));
+                from amount in Dsl.GetAmount<Unit>()
+                select Result.NewAmount(Math.Min(amount, amountLimit));
         }
 
-        private static RuleExprAst MaxTotalDebt(double debtLimit)
+        private static RuleExprAst<Result, RuleExprContext<Unit>> MaxTotalDebt(double debtLimit)
         {
             return
                (
                     from creditA in Variables.CreditA.Value
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
-                    where totalCredit > debtLimit
-                    select Decision.Reject
-               ).Lift();
+                    where totalCredit < debtLimit
+                    select Unit.Value
+               ).Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst MinTotalSalary(int salaryLimit)
+        private static RuleExprAst<Result, RuleExprContext<Unit>> MinTotalSalary(int salaryLimit)
         {
             return
                 from salaries in Variables.Salary.Values
-                where salaries.Sum() < salaryLimit
-                select Decision.Reject;
+                where salaries.Sum() > salaryLimit
+                select Result.Empty;
         }
 
-        private static RuleExprAst PrimaryApplicantMustHaveAddress()
+        private static RuleExprAst<Result, RuleExprContext<Unit>> PrimaryApplicantMustHaveAddress()
         {
             return
                 (
@@ -45,29 +46,29 @@ namespace ce_toy_cs
                     where role == Roles.Primary
                     from address in Variables.Address.Value
                     where !address.IsValid
-                    select Decision.Reject
-               ).Lift();
+                    select Unit.Value
+               ).Lift(FailIfAnyComplete).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst CreditScoreUnderLimit(double limit)
+        private static RuleExprAst<Result, RuleExprContext<Unit>> CreditScoreUnderLimit(double limit)
         {
             return
                (
                     from creditScore in Variables.CreditScore.Value
-                    where creditScore > limit
-                    select Decision.Reject
-               ).Lift();
+                    where creditScore < limit
+                    select Unit.Value
+               ).Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst Policies(int minAge, int maxAge, int maxFlags)
+        private static RuleExprAst<Result, RuleExprContext<Unit>> Policies(int minAge, int maxAge, int maxFlags)
         {
             return
-                new []
+                new RuleExprAst<Result, RuleExprContext<string>>[]
                 {
                     Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
                     Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
                     Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-                }.Join().Lift();
+                }.Join().Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
         }
 
         public static Rule GetProcess()
@@ -75,12 +76,12 @@ namespace ce_toy_cs
             return
                 new[]
                 {
-                    Convert.ToRuleExprAst(() => AbsoluteMaxAmount(100)),
-                    Convert.ToRuleExprAst(() => Policies(18, 100, 2)),
-                    Convert.ToRuleExprAst(() => MaxTotalDebt(50)),
-                    Convert.ToRuleExprAst(() => MinTotalSalary(50)),
-                    Convert.ToRuleExprAst(() => PrimaryApplicantMustHaveAddress()),
-                    Convert.ToRuleExprAst(() => CreditScoreUnderLimit(0.8))
+                    AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
+                    Policies(18, 100, 2).LogContext("Policies"),
+                    MaxTotalDebt(50).LogContext("MaxTotalDebt"),
+                    MinTotalSalary(50).LogContext("MinTotalSalary"),
+                    PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
+                    CreditScoreUnderLimit(0.8).LogContext("CreditScoreUnderLimit")
                 }.Join().CompileToRule();
         }
     }
