@@ -63,6 +63,10 @@ namespace ce_toy_cs.Framework
         }
     }
 
+    public static class ResultExtensions
+    {
+        public static Result ToResult(this int amount) => Result.NewAmount(amount);
+    }
 
     public record RuleExprAst<T, RuleExprContext>
     {

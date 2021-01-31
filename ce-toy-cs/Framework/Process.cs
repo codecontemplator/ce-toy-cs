@@ -1,9 +1,10 @@
 ﻿using ce_toy_cs.Framework.Functional;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace ce_toy_cs.Framework
 {
-    public record Rule
+    public record Process
     {
         public RuleExpr<Unit, RuleExprContext<Unit>> RuleExpr { get; init; }
         public IImmutableList<string> Keys { get; init; }
@@ -11,9 +12,10 @@ namespace ce_toy_cs.Framework
 
     public static class RuleExtensions
     {
-        public static Rule CompileToRule(this RuleExprAst<Unit, RuleExprContext<Unit>> ruleAst)
+        public static Process CompileToProcess(this IEnumerable<RuleExprAst<Result, RuleExprContext<Unit>>> ruleAsts)
         {
-            return new Rule
+            var ruleAst = ruleAsts.Join();
+            return new Process
             {
                 Keys = ruleAst.GetKeys().ToImmutableList(),
                 RuleExpr = ruleAst.Compile()

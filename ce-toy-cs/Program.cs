@@ -50,7 +50,7 @@ namespace ce_toy_cs
             }
         }
 
-        private static Applicant CreateApplicant(string applicantId, Rule process)
+        private static Applicant CreateApplicant(string applicantId, Framework.Process process)
         {
             var aprioriInfo = ApplicantDatabase.Instance.AprioriInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };

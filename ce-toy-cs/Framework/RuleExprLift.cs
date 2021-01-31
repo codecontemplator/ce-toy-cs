@@ -15,6 +15,21 @@ namespace ce_toy_cs.Framework
 
     static class RuleExprLift
     {
+        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicy(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
+        {
+            return sRuleExprAst.Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
+        }
+
+        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicies(this IEnumerable<RuleExprAst<Result, RuleExprContext<string>>> sRuleExprAst)
+        {
+            return sRuleExprAst.Join().Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
+        }
+
+        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftRequirement(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
+        {
+            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass).Select(_ => Result.Empty);
+        }
+
         public static RuleExprAst<T, RuleExprContext<Unit>> Lift<T>(this RuleExprAst<T, RuleExprContext<string>> sRuleExprAst, VoteMethod<T> vote)
         {
             var sRule = sRuleExprAst.ExceptionContext().Compile();
