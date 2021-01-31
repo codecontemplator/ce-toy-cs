@@ -70,7 +70,7 @@ namespace ce_toy_cs
                     Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
                     Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
                     Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-                }.Join().Lift(NoneShouldPass).Select(_ => Result.Empty);
+                }.Join().Lift(AllShouldPass).Select(_ => Result.Empty);
         }
 
         public static Rule GetProcess()

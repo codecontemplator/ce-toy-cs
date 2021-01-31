@@ -507,9 +507,9 @@ namespace ce_toy_cs.Framework
             return result.Apply();
         }
 
-        public static RuleExprAst<Result, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<T,bool>> predicate, string message)
+        public static RuleExprAst<Result, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T,bool> predicate, string message)
         {
-            return expr.Where(predicate).Select(_ => Result.Empty).LogContext(message);
+            return expr.Where(x => !predicate(x)).Select(_ => Result.Empty).LogContext(message);
         }
     }
 }
