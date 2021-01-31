@@ -420,7 +420,7 @@ namespace ce_toy_cs.Framework
 
         public static RuleExprAst<Result, RuleExprContext<Selector>> Join<Selector>(this RuleExprAst<Result, RuleExprContext<Selector>> expr, RuleExprAst<Result, RuleExprContext<Selector>> exprNext)
         {
-            throw new NotImplementedException();
+            return expr.Apply().SelectMany(_ => exprNext, (_,a) => a);
         }
         
         public static RuleExprAst<Unit, RuleExprContext<Selector>> Apply<Selector>(this RuleExprAst<Result, RuleExprContext<Selector>> expr)
