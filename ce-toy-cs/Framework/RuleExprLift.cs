@@ -9,8 +9,8 @@ namespace ce_toy_cs.Framework
 
     static class VoteMethods
     {
-        public static Option<Unit> FailIfAnyIncomplete(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-        public static Option<Unit> FailIfAnyComplete(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
+        public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
+        public static Option<Unit> NoneShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
     }
 
     static class RuleExprLift

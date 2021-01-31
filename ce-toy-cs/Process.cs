@@ -6,19 +6,21 @@ using System.Linq;
 
 namespace ce_toy_cs
 {
-    //using RuleExprAst = RuleExprAst<Decision, MRuleExprContext>;
+    using RuleDef = RuleExprAst<Result, RuleExprContext<Unit>>;
     using static VoteMethods;
 
     class Process
     {
-        private static RuleExprAst<Result, RuleExprContext<Unit>> AbsoluteMaxAmount(int amountLimit)
+        private static readonly Unit passed = Unit.Value;
+
+        private static RuleDef AbsoluteMaxAmount(int amountLimit)
         {
             return
                 from amount in Dsl.GetAmount<Unit>()
                 select Result.NewAmount(Math.Min(amount, amountLimit));
         }
 
-        private static RuleExprAst<Result, RuleExprContext<Unit>> MaxTotalDebt(double debtLimit)
+        private static RuleDef MaxTotalDebt(double debtLimit)
         {
             return
                (
@@ -26,11 +28,11 @@ namespace ce_toy_cs
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
                     where totalCredit < debtLimit
-                    select Unit.Value
-               ).Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
+                    select passed
+               ).Lift(AllShouldPass).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst<Result, RuleExprContext<Unit>> MinTotalSalary(int salaryLimit)
+        private static RuleDef MinTotalSalary(int salaryLimit)
         {
             return
                 from salaries in Variables.Salary.Values
@@ -38,7 +40,7 @@ namespace ce_toy_cs
                 select Result.Empty;
         }
 
-        private static RuleExprAst<Result, RuleExprContext<Unit>> PrimaryApplicantMustHaveAddress()
+        private static RuleDef PrimaryApplicantMustHaveAddress()
         {
             return
                 (
@@ -46,21 +48,21 @@ namespace ce_toy_cs
                     where role == Roles.Primary
                     from address in Variables.Address.Value
                     where !address.IsValid
-                    select Unit.Value
-               ).Lift(FailIfAnyComplete).Select(_ => Result.Empty);
+                    select passed
+               ).Lift(NoneShouldPass).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst<Result, RuleExprContext<Unit>> CreditScoreUnderLimit(double limit)
+        private static RuleDef CreditScoreUnderLimit(double limit)
         {
             return
                (
                     from creditScore in Variables.CreditScore.Value
                     where creditScore < limit
-                    select Unit.Value
-               ).Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
+                    select passed
+               ).Lift(AllShouldPass).Select(_ => Result.Empty);
         }
 
-        private static RuleExprAst<Result, RuleExprContext<Unit>> Policies(int minAge, int maxAge, int maxFlags)
+        private static RuleDef Policies(int minAge, int maxAge, int maxFlags)
         {
             return
                 new RuleExprAst<Result, RuleExprContext<string>>[]
@@ -68,7 +70,7 @@ namespace ce_toy_cs
                     Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
                     Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
                     Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-                }.Join().Lift(FailIfAnyIncomplete).Select(_ => Result.Empty);
+                }.Join().Lift(NoneShouldPass).Select(_ => Result.Empty);
         }
 
         public static Rule GetProcess()
@@ -81,7 +83,7 @@ namespace ce_toy_cs
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
-                    CreditScoreUnderLimit(0.8).LogContext("CreditScoreUnderLimit")
+                    CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
                 }.Join().CompileToRule();
         }
     }
