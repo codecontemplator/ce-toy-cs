@@ -16,11 +16,12 @@ namespace ce_toy_cs.Framework
     public record LogEntry
     {
         public string Message { get; init; }
-        public IRuleExprContext PreContext { get; init; }
-        public IRuleExprContext PostContext { get; init; }
+        public RuleExprContextBase PreContext { get; init; }
+        public RuleExprContextBase PostContext { get; init; }
         public object Value { get; init; }
     }
 
+    /*
     public interface IRuleExprContext
     {
         int Amount { get; }
@@ -28,24 +29,40 @@ namespace ce_toy_cs.Framework
         IRuleExprContext WithNewAmount(int amount);
         IRuleExprContext WithLogging(LogEntry entry);
     }
+    */
 
-    public record MRuleExprContext : IRuleExprContext
+    public abstract record RuleExprContextBase
     {
         public int Amount { get; init; }
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
-        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
-        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
     }
 
-    public record SRuleExprContext : IRuleExprContext
+    public record RuleExprContext<SelectorType> : RuleExprContextBase
     {
-        public int Amount { get; init; }
-        public Applicant Applicant { get; init; }
-        public ImmutableList<LogEntry> Log { get; init; }
-        public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
-        public IRuleExprContext WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
+        public SelectorType Selector { get; init; }
+        //public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
+        public RuleExprContext<SelectorType> WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
+        public RuleExprContext<NewSelectorType> WithSelector<NewSelectorType>(NewSelectorType newSelector) =>
+            new RuleExprContext<NewSelectorType> { Amount = Amount, Applicants = Applicants, Log = Log, Selector = newSelector };
     }
+
+    public class Result
+    {
+        public int? Amount { get; init; }
+
+        public static Result Empty { get; } = new Result();
+        public static Result NewAmount(int newAmount) => new Result { Amount = newAmount };
+
+        public RuleExprContext<SelectorType> Apply<SelectorType>(RuleExprContext<SelectorType> ctx)
+        {
+            return ctx with
+            {
+                Amount = Amount ?? ctx.Amount
+            };
+        }
+    }
+
 
     public record RuleExprAst<T, RuleExprContext>
     {
