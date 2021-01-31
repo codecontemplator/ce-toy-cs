@@ -79,6 +79,7 @@ namespace ce_toy_cs.Framework
             var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
+            var m = typeof(RuleExprContext).GetMethod("WithLogging");
             var functionImplementation =
                 Expression.Block(
                     Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
@@ -89,7 +90,7 @@ namespace ce_toy_cs.Framework
                         //Expression.Convert(
                             Expression.Call(
                                 contextAVar,
-                                typeof(T).GetMethod("WithLogging"),
+                                typeof(RuleExprContext).GetMethod("WithLogging"),
                                 CreateLogEntry(
                                     Expression.Constant(message),
                                     context,
@@ -427,10 +428,10 @@ namespace ce_toy_cs.Framework
         {
             var context = Expression.Parameter(typeof(RuleExprContext<Selector>), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Unit>, RuleExprContext<Selector>)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<Unit>), "valueOptionAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Result>, RuleExprContext<Selector>)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<Result>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext<Selector>), "contextAVar");
-
+            
             var functionImplementation =
                 Expression.Block(
                     Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
@@ -441,12 +442,15 @@ namespace ce_toy_cs.Framework
                         MkTuple<Option<Unit>, RuleExprContext<Selector>>(
                             WrapSome<Unit>(Expression.Constant(Unit.Value)),
                             Expression.Call(
-                                Expression.Field(valueOptionAVar, "value"), 
-                                typeof(RuleExprContext<Selector>).MakeGenericType(typeof(Selector)).GetMethod("Apply"),
+                                Expression.Field(valueOptionAVar, "value"),
+                                typeof(Result).GetMethod("Apply").MakeGenericMethod(typeof(Selector)),
                                 contextAVar
                             )
                         ),
-                        valueOptionAndContextAVar
+                        MkTuple<Option<Unit>, RuleExprContext<Selector>>(
+                            GetNoneValue<Unit>(),
+                            contextAVar
+                        )
                     )
                 );
 
