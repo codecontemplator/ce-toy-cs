@@ -9,7 +9,7 @@ namespace ce_toy_cs
     using Rule = RuleExprAst<Result, RuleExprContext<Unit>>;
     using Policy = RuleExprAst<Result, RuleExprContext<string>>;
 
-    class Process
+    class TestProcess
     {
         private static readonly Unit policy_pass = Unit.Value;
         private static readonly Unit requirement_reject = Unit.Value;
@@ -75,7 +75,7 @@ namespace ce_toy_cs
                 }.LiftPolicies();
         }
 
-        public static Framework.Process GetProcess()
+        public static Process GetProcess()
         {
             return
                 new[]
