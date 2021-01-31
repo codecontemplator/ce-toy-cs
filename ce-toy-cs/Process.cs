@@ -86,7 +86,7 @@ namespace ce_toy_cs
                     MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
                     CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
-                }.CompileToProcess();
+                }.CompileToProcess("Test process");
         }
     }
 }
