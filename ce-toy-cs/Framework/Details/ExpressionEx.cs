@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -39,6 +40,31 @@ namespace ce_toy_cs.Framework.Details
             );
 
             return block;
+        }
+
+        public static Expression MkTuple<T1, T2>(Expression t1, Expression t2)
+        {
+            Expression<Func<T1, T2, (T1, T2)>> toTuple = (x, y) => new Tuple<T1, T2>(x, y).ToValueTuple();
+            return Expression.Invoke(toTuple, t1, t2);
+        }
+
+        public static Expression WrapSome<T>(Expression value)
+        {
+            Expression<Func<T, Option<T>>> toSome = value => Option<T>.Some(value);
+            return Expression.Invoke(toSome, value);
+        }
+
+        public static Expression GetNoneValue<T>()
+        {
+            Expression<Func<Option<T>>> getNoneValue = () => Option<T>.None;
+            return Expression.Invoke(getNoneValue);
+        }
+
+        public static Expression CreateLogEntry(Expression messageExpr, Expression preContextExpr, Expression postContextExpr, Expression valueExpr)
+        {
+            Expression<Func<string, RuleExprContextBase, RuleExprContextBase, object, LogEntry>> createLogEntry = (message, preContext, postContext, value) =>
+                new LogEntry { Message = message, PreContext = preContext, PostContext = postContext, Value = value };
+            return Expression.Invoke(createLogEntry, messageExpr, preContextExpr, postContextExpr, valueExpr);
         }
     }
 }

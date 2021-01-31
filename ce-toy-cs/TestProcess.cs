@@ -7,12 +7,13 @@ using System.Linq;
 namespace ce_toy_cs
 {
     using Rule = RuleExprAst<Result, RuleExprContext<Unit>>;
-    using Policy = RuleExprAst<Result, RuleExprContext<string>>;
+    using RejectPolicy = RuleExprAst<DslSpecialized.PolicyRejectType, RuleExprContext<string>>;
+    using static ce_toy_cs.Framework.DslSpecialized;
 
     class TestProcess
     {
-        private static readonly Unit policy_pass = Unit.Value;
-        private static readonly Unit requirement_reject = Unit.Value;
+        private static readonly PolicyPassType policy_pass = PolicyPassType.Value;
+        private static readonly PolicyRejectType policy_reject = PolicyRejectType.Value;
         private static readonly Result rule_pass = Result.Empty;
 
         private static Rule AbsoluteMaxAmount(int amountLimit)
@@ -50,8 +51,8 @@ namespace ce_toy_cs
                     where role == Roles.Primary
                     from address in Variables.Address.Value
                     where !address.IsValid
-                    select requirement_reject
-               ).LiftRequirement();
+                    select policy_reject
+               ).LiftPolicy();
         }
 
         private static Rule CreditScoreUnderLimit(double limit)
@@ -67,11 +68,11 @@ namespace ce_toy_cs
         private static Rule Policies(int minAge, int maxAge, int maxFlags)
         {
             return
-                new Policy[]
+                new RejectPolicy[]
                 {
-                    Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
-                    Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
-                    Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
+                    Variables.Age.Value.RejectPolicy     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
+                    Variables.Deceased.Value.RejectPolicy(deceased => deceased,                $"Must be alive"),
+                    Variables.Flags.Value.RejectPolicy   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
                 }.LiftPolicies();
         }
 
@@ -81,11 +82,11 @@ namespace ce_toy_cs
                 new[]
                 {
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
-                    Policies(18, 100, 2).LogContext("Policies"),
-                    MaxTotalDebt(50).LogContext("MaxTotalDebt"),
-                    MinTotalSalary(50).LogContext("MinTotalSalary"),
-                    PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
-                    CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
+                    //Policies(18, 100, 2).LogContext("Policies"),
+                    //MaxTotalDebt(50).LogContext("MaxTotalDebt"),
+                    //MinTotalSalary(50).LogContext("MinTotalSalary"),
+                    //PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
+                    //CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
                 }.CompileToProcess("Test process");
         }
     }

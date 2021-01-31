@@ -15,7 +15,7 @@ namespace ce_toy_cs.Framework
     {
         public static Process CompileToProcess(this IEnumerable<RuleExprAst<Result, RuleExprContext<Unit>>> ruleAsts, string name)
         {
-            var ruleAst = ruleAsts.Join();
+            var ruleAst = ruleAsts.Join<Unit, Unit, Result>().Apply<Unit, Unit>();
             return new Process
             {
                 Name = name,

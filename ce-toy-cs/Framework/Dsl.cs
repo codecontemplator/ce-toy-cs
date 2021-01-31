@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ce_toy_cs.Framework
 {
-    static class Dsl
+    public static class Dsl
     {
         public static RuleExprAst<int, RuleExprContext<Selector>> GetAmount<Selector>()
         {

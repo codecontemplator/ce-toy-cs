@@ -1,15 +1,12 @@
 ﻿namespace ce_toy_cs.Framework.Functional
 {
-    public class Unit
+    public interface IUnit { }
+
+    public record Unit : IUnit
     {
         private Unit() { }
 
         public static Unit Value { get; } = new Unit();
-
-        public override bool Equals(object obj)
-        {
-            return obj is Unit;
-        }
 
         public override int GetHashCode()
         {

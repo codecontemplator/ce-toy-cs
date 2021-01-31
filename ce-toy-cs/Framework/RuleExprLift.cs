@@ -7,29 +7,14 @@ namespace ce_toy_cs.Framework
 {
     public delegate Option<T> VoteMethod<T>(IEnumerable<Option<T>> input);
 
-    static class VoteMethods
-    {
-        public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-        public static Option<Unit> NoneShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-    }
+    //static class VoteMethods
+    //{
+    //    public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
+    //    public static Option<Unit> NoneShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
+    //}
 
     static class RuleExprLift
     {
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicy(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
-        {
-            return sRuleExprAst.Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
-        }
-
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicies(this IEnumerable<RuleExprAst<Result, RuleExprContext<string>>> sRuleExprAst)
-        {
-            return sRuleExprAst.Join().Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
-        }
-
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftRequirement(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
-        {
-            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass).Select(_ => Result.Empty);
-        }
-
         public static RuleExprAst<T, RuleExprContext<Unit>> Lift<T>(this RuleExprAst<T, RuleExprContext<string>> sRuleExprAst, VoteMethod<T> vote)
         {
             var sRule = sRuleExprAst.ExceptionContext().Compile();
