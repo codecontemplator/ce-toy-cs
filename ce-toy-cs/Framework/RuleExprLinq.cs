@@ -425,7 +425,39 @@ namespace ce_toy_cs.Framework
         
         public static RuleExprAst<Unit, RuleExprContext<Selector>> Apply<Selector>(this RuleExprAst<Result, RuleExprContext<Selector>> expr)
         {
-            throw new NotImplementedException();
+            var context = Expression.Parameter(typeof(RuleExprContext<Selector>), "context");
+
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Unit>, RuleExprContext<Selector>)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<Unit>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext<Selector>), "contextAVar");
+
+            var functionImplementation =
+                Expression.Block(
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
+                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
+                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
+                    Expression.Condition(
+                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                        MkTuple<Option<Unit>, RuleExprContext<Selector>>(
+                            WrapSome<Unit>(Expression.Constant(Unit.Value)),
+                            Expression.Call(
+                                Expression.Field(valueOptionAVar, "value"), 
+                                typeof(RuleExprContext<Selector>).MakeGenericType(typeof(Selector)).GetMethod("Apply"),
+                                contextAVar
+                            )
+                        ),
+                        valueOptionAndContextAVar
+                    )
+                );
+
+            var functionBody =
+                Expression.Block(
+                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
+                    functionImplementation
+                );
+
+            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext<Selector>>>(functionBody, context);
+            return new RuleExprAst<Unit, RuleExprContext<Selector>> { Expression = function };
         }
 
         public static RuleExprAst<Unit, RuleExprContext<Selector>> Join<Selector>(this IEnumerable<RuleExprAst<Result, RuleExprContext<Selector>>> ruleExprAsts)
