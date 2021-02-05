@@ -434,7 +434,7 @@ namespace ce_toy_cs.Framework
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     Expression.Condition(
                         Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                        Expression.Invoke(exprNext.Expression, valueOptionAVar),
+                        Expression.Invoke(exprNext.Expression, contextAVar),
                         MkTuple<Option<Unit>, RuleExprContext>(
                             GetNoneValue<Unit>(),
                             contextAVar
@@ -456,13 +456,13 @@ namespace ce_toy_cs.Framework
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<IRuleContextApplicable>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<IRuleContextApplicable>), "valueOptionAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
             
             var functionImplementation =
                 Expression.Block(
-                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)), 
                     Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     Expression.Condition(
