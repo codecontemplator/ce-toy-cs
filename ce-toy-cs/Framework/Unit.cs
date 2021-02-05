@@ -27,7 +27,7 @@
         }
     }
 
-    public class FailUnit : IRuleContextApplicable
+    public class FailUnit // : IRuleContextApplicable
     {
         private FailUnit() { }
 
@@ -48,10 +48,10 @@
             return "(<fail>)";
         }
 
-        public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
-        {
-            return ctx;
-        }
+        //public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
+        //{
+        //    return ctx;
+        //}
     }
 
     public class PassUnit : IRuleContextApplicable

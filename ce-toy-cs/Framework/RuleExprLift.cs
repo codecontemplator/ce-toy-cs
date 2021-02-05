@@ -16,14 +16,14 @@ namespace ce_toy_cs.Framework
             public static Option<FailUnit> NoneShouldPass(IEnumerable<Option<FailUnit>> input) => input.Any(x => x.isSome) ? Option<FailUnit>.None : Option<FailUnit>.Some(FailUnit.Value);
         }
 
-        public static RuleExprAst<PassUnit, RuleExprContext<Unit>> Lift(this RuleExprAst<PassUnit, RuleExprContext<string>> sRuleExprAst)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<PassUnit, RuleExprContext<string>> sRuleExprAst)
         {
-            return sRuleExprAst.Lift(VoteMethods.AllShouldPass);
+            return sRuleExprAst.Lift(VoteMethods.AllShouldPass).Select(_ => Unit.Value);
         }
 
-        public static RuleExprAst<FailUnit, RuleExprContext<Unit>> Lift(this RuleExprAst<FailUnit, RuleExprContext<string>> sRuleExprAst)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<FailUnit, RuleExprContext<string>> sRuleExprAst)
         {
-            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass);
+            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass).Select(_ => Unit.Value);
         }
 
         public static RuleExprAst<T, RuleExprContext<Unit>> Lift<T>(this RuleExprAst<T, RuleExprContext<string>> sRuleExprAst, VoteMethod<T> vote)

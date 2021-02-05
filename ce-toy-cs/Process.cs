@@ -11,6 +11,7 @@ namespace ce_toy_cs
     class Process
     {
         private static readonly PassUnit passed = PassUnit.Value;
+        private static readonly FailUnit rejected = FailUnit.Value;
 
         private static RuleDef AbsoluteMaxAmount(int amountLimit)
         {
@@ -51,7 +52,7 @@ namespace ce_toy_cs
                     where role == Roles.Primary
                     from address in Variables.Address.Value
                     where !address.IsValid
-                    select passed
+                    select rejected
                ).Lift().Apply();
         }
 
