@@ -31,7 +31,7 @@ namespace ce_toy_cs
                     let totalCredit = creditA + creditB
                     where totalCredit < debtLimit
                     select passed
-               ).Lift().Apply();// (AllShouldPass).Select(_ => Result.Empty);
+               ).Lift().Apply();
         }
 
         private static RuleDef MinTotalSalary(int salaryLimit)
@@ -66,16 +66,16 @@ namespace ce_toy_cs
                ).Lift().Apply();
         }
 
-        //private static RuleDef Policies(int minAge, int maxAge, int maxFlags)
-        //{
-        //    return
-        //        new RuleExprAst<Unit, RuleExprContext<string>>[]
-        //        {
-        //            Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
-        //            Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
-        //            Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-        //        }.Join().Lift();
-        //}
+        private static RuleDef Policies(int minAge, int maxAge, int maxFlags)
+        {
+            return
+                new RuleDef[]
+                {
+                    Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
+                    Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
+                    Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
+                }.Join();
+        }
 
         public static Rule GetProcess()
         {
@@ -83,7 +83,7 @@ namespace ce_toy_cs
                 new[]
                 {
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
-                    //Policies(18, 100, 2).LogContext("Policies"),
+                    Policies(18, 100, 2).LogContext("Policies"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
