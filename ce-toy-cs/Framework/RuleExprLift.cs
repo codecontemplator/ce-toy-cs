@@ -5,16 +5,27 @@ using System.Linq;
 
 namespace ce_toy_cs.Framework
 {
-    public delegate Option<T> VoteMethod<T>(IEnumerable<Option<T>> input);
-
-    static class VoteMethods
-    {
-        public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-        public static Option<Unit> NoneShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-    }
 
     static class RuleExprLift
     {
+        public delegate Option<T> VoteMethod<T>(IEnumerable<Option<T>> input);
+
+        private class VoteMethods
+        {
+            public static Option<PassUnit> AllShouldPass(IEnumerable<Option<PassUnit>> input) => input.Any(x => !x.isSome) ? Option<PassUnit>.None : Option<PassUnit>.Some(PassUnit.Value);
+            public static Option<FailUnit> NoneShouldPass(IEnumerable<Option<FailUnit>> input) => input.Any(x => x.isSome) ? Option<FailUnit>.None : Option<FailUnit>.Some(FailUnit.Value);
+        }
+
+        public static RuleExprAst<PassUnit, RuleExprContext<Unit>> Lift(this RuleExprAst<PassUnit, RuleExprContext<string>> sRuleExprAst)
+        {
+            return sRuleExprAst.Lift(VoteMethods.AllShouldPass);
+        }
+
+        public static RuleExprAst<FailUnit, RuleExprContext<Unit>> Lift(this RuleExprAst<FailUnit, RuleExprContext<string>> sRuleExprAst)
+        {
+            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass);
+        }
+
         public static RuleExprAst<T, RuleExprContext<Unit>> Lift<T>(this RuleExprAst<T, RuleExprContext<string>> sRuleExprAst, VoteMethod<T> vote)
         {
             var sRule = sRuleExprAst.ExceptionContext().Compile();

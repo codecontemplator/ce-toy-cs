@@ -47,22 +47,25 @@ namespace ce_toy_cs.Framework
             new RuleExprContext<NewSelectorType> { Amount = Amount, Applicants = Applicants, Log = Log, Selector = newSelector };
     }
 
-    public class Result
+    public interface IRuleContextApplicable
     {
-        public int? Amount { get; init; }
-
-        public static Result Empty { get; } = new Result();
-        public static Result NewAmount(int newAmount) => new Result { Amount = newAmount };
-
-        public RuleExprContext<SelectorType> Apply<SelectorType>(RuleExprContext<SelectorType> ctx)
-        {
-            return ctx with
-            {
-                Amount = Amount ?? ctx.Amount
-            };
-        }
+        RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase;
     }
 
+    public class Amount : IRuleContextApplicable
+    {
+        public Amount(int value)
+        {
+            Value = value;
+        }
+
+        public int Value { get; }
+
+        public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
+        {
+            return ctx with { Amount = Value };
+        }
+    }
 
     public record RuleExprAst<T, RuleExprContext>
     {
