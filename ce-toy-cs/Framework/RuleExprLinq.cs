@@ -502,7 +502,7 @@ namespace ce_toy_cs.Framework
 
         public static RuleExprAst<Unit, RuleExprContext<Unit>> RejectIf<T>(this RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T,bool>> predicate, string message)
         {
-            return expr.Where(predicate).Select(_ => FailUnit.Value).Lift().LogContext(message);
+            return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message).Lift();
         }
     }
 }
