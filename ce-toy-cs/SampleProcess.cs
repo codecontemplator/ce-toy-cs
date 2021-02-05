@@ -8,7 +8,7 @@ namespace ce_toy_cs
 {
     using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
 
-    class Process
+    class SampleProcess
     {
         private static readonly PassUnit passed = PassUnit.Value;
         private static readonly FailUnit rejected = FailUnit.Value;
@@ -77,7 +77,7 @@ namespace ce_toy_cs
                 }.Join();
         }
 
-        public static Rule GetProcess()
+        public static Process GetProcess()
         {
             return
                 new[]
@@ -88,7 +88,7 @@ namespace ce_toy_cs
                     MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
                     CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
-                }.Join().CompileToRule();
+                }.CompileToProcess("Sample process");
         }
     }
 }

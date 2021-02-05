@@ -13,7 +13,7 @@ namespace ce_toy_cs.Framework
 
     public static class RuleExtensions
     {
-        public static Process CompileToProcess(this IEnumerable<RuleExprAst<Result, RuleExprContext<Unit>>> ruleAsts, string name)
+        public static Process CompileToProcess(this IEnumerable<RuleExprAst<Unit, RuleExprContext<Unit>>> ruleAsts, string name)
         {
             var ruleAst = ruleAsts.Join();
             return new Process

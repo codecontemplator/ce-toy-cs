@@ -10,7 +10,7 @@ namespace ce_toy_cs
     {
         static void Main(string[] args)
         {
-            var process = TestProcess.GetProcess();
+            var process = SampleProcess.GetProcess();
 
             Console.WriteLine("# Process created");
             Console.WriteLine($"Required keys: {string.Join(',', process.Keys)}");
