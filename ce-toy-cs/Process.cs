@@ -6,23 +6,23 @@ using System.Linq;
 
 namespace ce_toy_cs
 {
-    using Rule = RuleExprAst<Result, RuleExprContext<Unit>>;
-    using Policy = RuleExprAst<Result, RuleExprContext<string>>;
+    using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
 
-    class TestProcess
+    class Process
     {
-        private static readonly Unit policy_pass = Unit.Value;
-        private static readonly Unit requirement_reject = Unit.Value;
-        private static readonly Result rule_pass = Result.Empty;
+        private static readonly PassUnit passed = PassUnit.Value;
+        private static readonly FailUnit rejected = FailUnit.Value;
 
-        private static Rule AbsoluteMaxAmount(int amountLimit)
+        private static RuleDef AbsoluteMaxAmount(int amountLimit)
         {
             return
-                from amount in Dsl.GetAmount<Unit>()
-                select Math.Min(amount, amountLimit).ToResult();
+                (
+                    from amount in Dsl.GetAmount<Unit>()
+                    select new Amount(Math.Min(amount, amountLimit))
+                ).Apply();
         }
 
-        private static Rule MaxTotalDebt(double debtLimit)
+        private static RuleDef MaxTotalDebt(double debtLimit)
         {
             return
                (
@@ -30,19 +30,21 @@ namespace ce_toy_cs
                     from creditB in Variables.CreditB.Value
                     let totalCredit = creditA + creditB
                     where totalCredit < debtLimit
-                    select policy_pass
-               ).LiftPolicy();
+                    select passed
+               ).Lift().Apply();
         }
 
-        private static Rule MinTotalSalary(int salaryLimit)
+        private static RuleDef MinTotalSalary(int salaryLimit)
         {
             return
-                from salaries in Variables.Salary.Values
-                where salaries.Sum() > salaryLimit
-                select rule_pass;
+                (
+                    from salaries in Variables.Salary.Values
+                    where salaries.Sum() > salaryLimit
+                    select passed
+                ).Apply();
         }
 
-        private static Rule PrimaryApplicantMustHaveAddress()
+        private static RuleDef PrimaryApplicantMustHaveAddress()
         {
             return
                 (
@@ -50,32 +52,32 @@ namespace ce_toy_cs
                     where role == Roles.Primary
                     from address in Variables.Address.Value
                     where !address.IsValid
-                    select requirement_reject
-               ).LiftRequirement();
+                    select rejected
+               ).Lift().Apply();
         }
 
-        private static Rule CreditScoreUnderLimit(double limit)
+        private static RuleDef CreditScoreUnderLimit(double limit)
         {
             return
                (
                     from creditScore in Variables.CreditScore.Value
                     where creditScore < limit
-                    select policy_pass
-               ).LiftPolicy();
+                    select passed
+               ).Lift().Apply();
         }
 
-        private static Rule Policies(int minAge, int maxAge, int maxFlags)
+        private static RuleDef Policies(int minAge, int maxAge, int maxFlags)
         {
             return
-                new Policy[]
+                new RuleDef[]
                 {
                     Variables.Age.Value.RejectIf     (age => age < minAge || age > maxAge, $"Age must be greater than {minAge} and less than {maxAge}"),
                     Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
                     Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
-                }.LiftPolicies();
+                }.Join();
         }
 
-        public static Process GetProcess()
+        public static Rule GetProcess()
         {
             return
                 new[]
@@ -86,7 +88,7 @@ namespace ce_toy_cs
                     MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
                     CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
-                }.CompileToProcess("Test process");
+                }.Join().CompileToRule();
         }
     }
 }

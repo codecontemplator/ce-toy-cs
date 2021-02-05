@@ -21,16 +21,6 @@ namespace ce_toy_cs.Framework
         public object Value { get; init; }
     }
 
-    /*
-    public interface IRuleExprContext
-    {
-        int Amount { get; }
-        ImmutableList<LogEntry> Log { get; }
-        IRuleExprContext WithNewAmount(int amount);
-        IRuleExprContext WithLogging(LogEntry entry);
-    }
-    */
-
     public abstract record RuleExprContextBase
     {
         public int Amount { get; init; }
@@ -41,31 +31,29 @@ namespace ce_toy_cs.Framework
     public record RuleExprContext<SelectorType> : RuleExprContextBase
     {
         public SelectorType Selector { get; init; }
-        //public IRuleExprContext WithNewAmount(int amount) => this with { Amount = amount };
         public RuleExprContext<SelectorType> WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
         public RuleExprContext<NewSelectorType> WithSelector<NewSelectorType>(NewSelectorType newSelector) =>
             new RuleExprContext<NewSelectorType> { Amount = Amount, Applicants = Applicants, Log = Log, Selector = newSelector };
     }
 
-    public class Result
+    public interface IRuleContextApplicable
     {
-        public int? Amount { get; init; }
-
-        public static Result Empty { get; } = new Result();
-        public static Result NewAmount(int newAmount) => new Result { Amount = newAmount };
-
-        public RuleExprContext<SelectorType> Apply<SelectorType>(RuleExprContext<SelectorType> ctx)
-        {
-            return ctx with
-            {
-                Amount = Amount ?? ctx.Amount
-            };
-        }
+        RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase;
     }
 
-    public static class ResultExtensions
+    public class Amount : IRuleContextApplicable
     {
-        public static Result ToResult(this int amount) => Result.NewAmount(amount);
+        public Amount(int value)
+        {
+            Value = value;
+        }
+
+        public int Value { get; }
+
+        public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
+        {
+            return ctx with { Amount = Value };
+        }
     }
 
     public record RuleExprAst<T, RuleExprContext>

@@ -5,29 +5,25 @@ using System.Linq;
 
 namespace ce_toy_cs.Framework
 {
-    public delegate Option<T> VoteMethod<T>(IEnumerable<Option<T>> input);
-
-    static class VoteMethods
-    {
-        public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-        public static Option<Unit> NoneShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
-    }
 
     static class RuleExprLift
     {
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicy(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
+        public delegate Option<T> VoteMethod<T>(IEnumerable<Option<T>> input);
+
+        private class VoteMethods
         {
-            return sRuleExprAst.Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
+            public static Option<PassUnit> AllShouldPass(IEnumerable<Option<PassUnit>> input) => input.Any(x => !x.isSome) ? Option<PassUnit>.None : Option<PassUnit>.Some(PassUnit.Value);
+            public static Option<FailUnit> NoneShouldPass(IEnumerable<Option<FailUnit>> input) => input.Any(x => x.isSome) ? Option<FailUnit>.None : Option<FailUnit>.Some(FailUnit.Value);
         }
 
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftPolicies(this IEnumerable<RuleExprAst<Result, RuleExprContext<string>>> sRuleExprAst)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<PassUnit, RuleExprContext<string>> sRuleExprAst)
         {
-            return sRuleExprAst.Join().Lift(VoteMethods.AllShouldPass).Select(_ => Result.Empty);
+            return sRuleExprAst.Lift(VoteMethods.AllShouldPass).Select(_ => Unit.Value);
         }
 
-        public static RuleExprAst<Result, RuleExprContext<Unit>> LiftRequirement(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<FailUnit, RuleExprContext<string>> sRuleExprAst)
         {
-            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass).Select(_ => Result.Empty);
+            return sRuleExprAst.Lift(VoteMethods.NoneShouldPass).Select(_ => Unit.Value);
         }
 
         public static RuleExprAst<T, RuleExprContext<Unit>> Lift<T>(this RuleExprAst<T, RuleExprContext<string>> sRuleExprAst, VoteMethod<T> vote)

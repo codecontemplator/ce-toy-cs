@@ -419,14 +419,13 @@ namespace ce_toy_cs.Framework
             //   return aborted ? (None, context) : (Just as, context)
         }
 
-        public static RuleExprAst<Result, RuleExprContext<Selector>> Join<Selector>(this RuleExprAst<Result, RuleExprContext<Selector>> expr, RuleExprAst<Result, RuleExprContext<Selector>> exprNext)
+        public static RuleExprAst<Unit, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<Unit, RuleExprContext> expr, RuleExprAst<Unit, RuleExprContext> exprNext)
         {
-            //return expr.Apply().SelectMany(_ => exprNext, (_,a) => a);
-            var context = Expression.Parameter(typeof(RuleExprContext<Selector>), "context");
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Result>, RuleExprContext<Selector>)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<Result>), "valueOptionAVar");
-            var contextAVar = Expression.Variable(typeof(RuleExprContext<Selector>), "contextAVar");
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Unit>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<Unit>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
                 Expression.Block(
@@ -435,54 +434,8 @@ namespace ce_toy_cs.Framework
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     Expression.Condition(
                         Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                        Expression.Invoke(exprNext.Expression,
-                            Expression.Call(
-                                Expression.Field(valueOptionAVar, "value"),
-                                typeof(Result).GetMethod("Apply").MakeGenericMethod(typeof(Selector)),
-                                contextAVar
-                            )
-                        ),
-                        MkTuple<Option<Result>, RuleExprContext<Selector>>(
-                            GetNoneValue<Result>(),
-                            contextAVar
-                        )
-                    )
-                );
-
-            var functionBody =
-                Expression.Block(
-                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
-                    functionImplementation
-                );
-
-            var function = Expression.Lambda<RuleExpr<Result, RuleExprContext<Selector>>>(functionBody, context);
-            return new RuleExprAst<Result, RuleExprContext<Selector>> { Expression = function };
-        }
-
-        public static RuleExprAst<Unit, RuleExprContext<Selector>> Apply<Selector>(this RuleExprAst<Result, RuleExprContext<Selector>> expr)
-        {
-            var context = Expression.Parameter(typeof(RuleExprContext<Selector>), "context");
-
-            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<Result>, RuleExprContext<Selector>)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<Result>), "valueOptionAVar");
-            var contextAVar = Expression.Variable(typeof(RuleExprContext<Selector>), "contextAVar");
-            
-            var functionImplementation =
-                Expression.Block(
-                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
-                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
-                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
-                    Expression.Condition(
-                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                        MkTuple<Option<Unit>, RuleExprContext<Selector>>(
-                            WrapSome<Unit>(Expression.Constant(Unit.Value)),
-                            Expression.Call(
-                                Expression.Field(valueOptionAVar, "value"),
-                                typeof(Result).GetMethod("Apply").MakeGenericMethod(typeof(Selector)),
-                                contextAVar
-                            )
-                        ),
-                        MkTuple<Option<Unit>, RuleExprContext<Selector>>(
+                        Expression.Invoke(exprNext.Expression, contextAVar),
+                        MkTuple<Option<Unit>, RuleExprContext>(
                             GetNoneValue<Unit>(),
                             contextAVar
                         )
@@ -495,21 +448,61 @@ namespace ce_toy_cs.Framework
                     functionImplementation
                 );
 
-            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext<Selector>>>(functionBody, context);
-            return new RuleExprAst<Unit, RuleExprContext<Selector>> { Expression = function };
+            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext>>(functionBody, context);
+            return new RuleExprAst<Unit, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<Unit, RuleExprContext<Selector>> Join<Selector>(this IEnumerable<RuleExprAst<Result, RuleExprContext<Selector>>> ruleExprAsts)
+        public static RuleExprAst<Unit, RuleExprContext> Apply<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr) where T : IRuleContextApplicable
+        {
+            var context = Expression.Parameter(typeof(RuleExprContext), "context");
+
+            var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
+            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
+            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
+            
+            var functionImplementation =
+                Expression.Block(
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)), 
+                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
+                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
+                    Expression.Condition(
+                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
+                        MkTuple<Option<Unit>, RuleExprContext>(
+                            WrapSome<Unit>(Expression.Constant(Unit.Value)),
+                            Expression.Call(
+                                Expression.Field(valueOptionAVar, "value"),
+                                typeof(IRuleContextApplicable).GetMethod("ApplyTo").MakeGenericMethod(typeof(RuleExprContext)),
+                                contextAVar
+                            )
+                        ),
+                        MkTuple<Option<Unit>, RuleExprContext>(
+                            GetNoneValue<Unit>(),
+                            contextAVar
+                        )
+                    )
+                );
+
+            var functionBody =
+                Expression.Block(
+                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
+                    functionImplementation
+                );
+
+            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext>>(functionBody, context);
+            return new RuleExprAst<Unit, RuleExprContext> { Expression = function };
+        }
+
+        public static RuleExprAst<Unit, RuleExprContext> Join<RuleExprContext>(this IEnumerable<RuleExprAst<Unit, RuleExprContext>> ruleExprAsts)
         {
             var result = ruleExprAsts.First();
             foreach (var next in ruleExprAsts.Skip(1))
                 result = result.Join(next);
-            return result.Apply();
+            return result;
         }
 
-        public static RuleExprAst<Result, RuleExprContext> RejectIf<T,RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Func<T,bool> predicate, string message)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> RejectIf<T>(this RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T,bool>> predicate, string message)
         {
-            return expr.Where(x => !predicate(x)).Select(_ => Result.Empty).LogContext(message);
+            return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message).Lift();
         }
     }
 }
